@@ -30,7 +30,7 @@ function hurt(s,n){s.hp=Math.max(0,s.hp-n);if(!s.hp){s.phase='dead';log(s,'灯�
 function encounter(s,boss=false){const names=['苔角の獣','宵羽の蛾','根絡みの番人'];const hp=boss?65:19+s.floor*6;s.enemy={name:boss?'星樹の守り手':names[roll(s,3)],hp,maxHp:hp,turn:0,boss};s.phase='battle';log(s,`${s.enemy.name}が道をふさいだ。`);}
 export function act(s,action){
  if(!s||['dead','won','returned'].includes(s.phase))return false;
- if(action==='return' && s.phase!=='battle'){s.phase=s.relic?'won':'returned';log(s,s.relic?'星の種を抱え、森の外へ帰還した。':'帰還の糸をたどり、無事に森を出た。');return true;}
+ if(action==='return' && s.phase!=='battle'){s.phase=s.relic?'won':'returned';log(s,s.relic?'星の種を抱え、森の外へ帰還した。':'帰路の灯に導かれ、無事に森を出た。');return true;}
  if(s.phase==='battle')return battle(s,action);
  if(action==='potion'){if(!s.potions||s.hp===s.maxHp)return false;s.potions--;s.hp=Math.min(s.maxHp,s.hp+42);log(s,'露の薬を飲み、体力が42回復した。');return true;}
  if(action==='descend'&&s.phase==='stairs'){s.floor++;s.map=generate(s.seed,s.floor);s.x=s.y=1;s.dir=s.map.grid[1][2]?2:1;s.light=Math.min(100,s.light+25);s.focus=6;s.hp=Math.min(100,s.hp+18);s.phase='explore';s.previous=[1,1];reveal(s);log(s,`第${s.floor}層へ。灯りと気力が少し戻った。`);return true;}
@@ -65,7 +65,7 @@ function battle(s,a){
  if(a==='attack'||a==='skill'){const dmg=a==='skill'?23+roll(s,7):10+roll(s,5);if(a==='skill')s.focus-=3;e.hp=Math.max(0,e.hp-dmg);message=`${a==='skill'?'翠の一閃':'短剣の一撃'}。${dmg}のダメージ。`;}
  if(a==='potion'){s.potions--;s.hp=Math.min(100,s.hp+42);message='露の薬で体力を42回復。';}
  if(a==='guard'){s.focus=Math.min(6,s.focus+2);message='身を守り、気力を2回復。';}
- if(e.hp<=0){s.kills++;s.gold+=e.boss?100:8+s.floor*4;s.focus=Math.min(6,s.focus+1);delete s.map.events[key(s.x,s.y)];s.phase='explore';if(e.boss){s.relic=true;message+=' 星の種を手に入れた！ 帰還の糸を使おう。';}else message+=' 魔物を退けた。';s.enemy=null;log(s,message);return true;}
+ if(e.hp<=0){s.kills++;s.gold+=e.boss?100:8+s.floor*4;s.focus=Math.min(6,s.focus+1);delete s.map.events[key(s.x,s.y)];s.phase='explore';if(e.boss){s.relic=true;message+=' 星の種を手に入れた！ 帰路の灯を使おう。';}else message+=' 魔物を退けた。';s.enemy=null;log(s,message);return true;}
  const heavy=e.turn%3===2;let damage=(e.boss?9:3+s.floor)+roll(s,4);if(heavy)damage*=2;if(a==='guard')damage=Math.max(1,Math.floor(damage/4));e.turn++;hurt(s,damage);if(s.phase!=='dead')log(s,`${message} ${heavy?'強撃':'反撃'}で${damage}失った。`);return true;
 }
 export function serialize(s){return JSON.stringify(s);}
@@ -79,6 +79,7 @@ export function restore(raw){
  if(!Array.isArray(s.previous)||s.previous.length!==2||!s.previous.every(v=>int(v,0,10))||s.map.grid[s.previous[1]][s.previous[0]]!==0)return null;
  if(!Array.isArray(s.log)||s.log.length>4||s.log.some(t=>typeof t!=='string'||t.length>200))return null;
  if(s.phase==='battle'&&(!s.enemy||typeof s.enemy.name!=='string'||s.enemy.name.length>40||!int(s.enemy.hp,1,100)||!int(s.enemy.maxHp,1,100)||s.enemy.hp>s.enemy.maxHp||!int(s.enemy.turn,0,100000)||typeof s.enemy.boss!=='boolean'))return null;
+ s.log=s.log.map(t=>t.replaceAll('帰還の糸','帰路の灯'));
  return s;
  }catch{return null;}
 }
