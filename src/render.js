@@ -1,4 +1,4 @@
-import {DIRS,key,random} from './game.js';
+import {DIRS,key,random} from './game.js?v=20260930-round2';
 import {illumination} from './view.js';
 const W=840,H=640;
 function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}

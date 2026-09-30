@@ -31,7 +31,7 @@ try:
             assert button.locator('.action-icon').inner_text()=='⚗'
             assert button.locator('#battle-potion-label').inner_text()=='露の薬'
             assert button.locator('#battle-potion-count').inner_text()==f'×{count}'
-            expect(button).to_have_accessible_name(f'露の薬、残り{count}個、体力42回復')
+            expect(button).to_have_accessible_name(f'露の薬、残り{count}個、体力最大42回復')
             box=button.bounding_box();assert box['width']>=44 and box['height']>=44
         fixture(3);check(3)
         page.locator('#battle-potion').tap();page.wait_for_timeout(250);check(2)
@@ -53,7 +53,7 @@ try:
         expect(page.locator('#potion')).to_be_disabled()
         assert page.locator('#potions').inner_text()=='0'
         fixture(3);check(3)
-        assert page.locator('script[type="module"]').get_attribute('src').endswith('?v=20260930-round1')
+        assert page.locator('script[type="module"]').get_attribute('src').endswith('?v=20260930-round2')
         assert not errors, errors
         print('PASS: 3→2 / reload / battle→explore / map legend / 1→0 / disabled / reload / new battle; icon, single label, accessible count, 44px targets; no JS errors')
         browser.close()

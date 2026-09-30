@@ -25,6 +25,8 @@ export function fresh(seed=Math.floor(Math.random()*4294967296)){
  if(s.map.grid[1][2])s.dir=2;reveal(s);return s;
 }
 function roll(s,n){s.rng=(Math.imul(s.rng,1664525)+1013904223)>>>0;return s.rng%n;}
+function recover(s,field,amount,max){const before=s[field];s[field]=Math.min(max,before+amount);return s[field]-before;}
+function recovery(label,amount){return amount?`${label}が${amount}回復`:`${label}は満タン（回復なし）`;}
 function log(s,t){s.log=[t,...s.log].slice(0,4);}
 function hurt(s,n){s.hp=Math.max(0,s.hp-n);if(!s.hp){s.phase='dead';log(s,'灯りが遠のく。探索は、ここで終わった。');}}
 function encounter(s,boss=false){const names=['苔角の獣','宵羽の蛾','根絡みの番人'];const hp=boss?65:19+s.floor*6;s.enemy={name:boss?'星樹の守り手':names[roll(s,3)],hp,maxHp:hp,turn:0,boss};s.phase='battle';log(s,`${s.enemy.name}が道をふさいだ。`);}
@@ -32,8 +34,8 @@ export function act(s,action){
  if(!s||['dead','won','returned'].includes(s.phase))return false;
  if(action==='return' && s.phase!=='battle'){s.phase=s.relic?'won':'returned';log(s,s.relic?'星の種を抱え、森の外へ帰還した。':'帰路の灯に導かれ、無事に森を出た。');return true;}
  if(s.phase==='battle')return battle(s,action);
- if(action==='potion'){if(!s.potions||s.hp===s.maxHp)return false;s.potions--;s.hp=Math.min(s.maxHp,s.hp+42);log(s,'露の薬を飲み、体力が42回復した。');return true;}
- if(action==='descend'&&s.phase==='stairs'){s.floor++;s.map=generate(s.seed,s.floor);s.x=s.y=1;s.dir=s.map.grid[1][2]?2:1;s.light=Math.min(100,s.light+25);s.focus=6;s.hp=Math.min(100,s.hp+18);s.phase='explore';s.previous=[1,1];reveal(s);log(s,`第${s.floor}層へ。灯りと気力が少し戻った。`);return true;}
+ if(action==='potion'){if(!s.potions||s.hp===s.maxHp)return false;s.potions--;const healed=recover(s,'hp',42,s.maxHp);log(s,`露の薬。${recovery('体力',healed)}。`);return true;}
+ if(action==='descend'&&s.phase==='stairs'){s.floor++;s.map=generate(s.seed,s.floor);s.x=s.y=1;s.dir=s.map.grid[1][2]?2:1;const light=recover(s,'light',25,100),focus=recover(s,'focus',6,6),hp=recover(s,'hp',18,100);s.phase='explore';s.previous=[1,1];reveal(s);log(s,`第${s.floor}層へ。${recovery('体力',hp)}。${recovery('灯り',light)}。${recovery('気力',focus)}。`);return true;}
  if(action==='stay'&&s.phase==='stairs'){s.phase='explore';return true;}
  if(s.phase==='stairs')return false;
  if(action==='left'||action==='right'){s.dir=(s.dir+(action==='left'?3:1))%4;return true;}
@@ -45,8 +47,8 @@ export function act(s,action){
  const k=key(x,y),e=s.map.events[k];
  if(e==='enemy')encounter(s);
  else if(e==='shrine')encounter(s,true);
- else if(e==='chest'){delete s.map.events[k];const gold=18+roll(s,18);s.gold+=gold;s.potions++;s.light=Math.min(100,s.light+10);log(s,`古い箱に結晶${gold}個と露の薬。灯りも10回復。`);}
- else if(e==='spring'){delete s.map.events[k];s.hp=Math.min(100,s.hp+30);s.focus=6;log(s,'清らかな泉。体力が30回復し、気力が満ちた。');}
+ else if(e==='chest'){delete s.map.events[k];const gold=18+roll(s,18);s.gold+=gold;s.potions++;const light=recover(s,'light',10,100);log(s,`古い箱に結晶${gold}個と露の薬。${recovery('灯り',light)}。`);}
+ else if(e==='spring'){delete s.map.events[k];const hp=recover(s,'hp',30,100),focus=recover(s,'focus',6,6);log(s,`清らかな泉。${recovery('体力',hp)}。${recovery('気力',focus)}。`);}
  else if(e==='stairs'){s.phase='stairs';log(s,'根の階段を見つけた。この先は、さらに深い森。');}
  else if(s.light>0)log(s,s.steps%4===0?'葉擦れの向こうに、何かの気配がする。':'地図に、新しい一歩を刻む。');
  return true;
@@ -63,10 +65,10 @@ function battle(s,a){
  }
  let message='';
  if(a==='attack'||a==='skill'){const dmg=a==='skill'?23+roll(s,7):10+roll(s,5);if(a==='skill')s.focus-=3;e.hp=Math.max(0,e.hp-dmg);message=`${a==='skill'?'翠の一閃':'短剣の一撃'}。${dmg}のダメージ。`;}
- if(a==='potion'){s.potions--;s.hp=Math.min(100,s.hp+42);message='露の薬で体力を42回復。';}
- if(a==='guard'){s.focus=Math.min(6,s.focus+2);message='身を守り、気力を2回復。';}
+ if(a==='potion'){s.potions--;const hp=recover(s,'hp',42,100);message=`露の薬による回復：${recovery('体力',hp)}。`;}
+ if(a==='guard'){const focus=recover(s,'focus',2,6);message=`身を守った。${recovery('気力',focus)}。`;}
  if(e.hp<=0){s.kills++;s.gold+=e.boss?100:8+s.floor*4;s.focus=Math.min(6,s.focus+1);delete s.map.events[key(s.x,s.y)];s.phase='explore';if(e.boss){s.relic=true;message+=' 星の種を手に入れた！ 帰路の灯を使おう。';}else message+=' 魔物を退けた。';s.enemy=null;log(s,message);return true;}
- const heavy=e.turn%3===2;let damage=(e.boss?9:3+s.floor)+roll(s,4);if(heavy)damage*=2;if(a==='guard')damage=Math.max(1,Math.floor(damage/4));e.turn++;hurt(s,damage);if(s.phase!=='dead')log(s,`${message} ${heavy?'強撃':'反撃'}で${damage}失った。`);return true;
+ const heavy=e.turn%3===2;let damage=(e.boss?9:3+s.floor)+roll(s,4);if(heavy)damage*=2;if(a==='guard')damage=Math.max(1,Math.floor(damage/4));e.turn++;hurt(s,damage);if(s.phase!=='dead')log(s,`${message} 敵の${heavy?'強撃':'反撃'}：体力に${damage}ダメージ。`);return true;
 }
 export function serialize(s){return JSON.stringify(s);}
 export function restore(raw){

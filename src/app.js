@@ -1,4 +1,4 @@
-import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js';
+import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js?v=20260930-round2';
 import {drawScene,drawMap} from './render.js';
 import {cameraAt,beginMotion} from './view.js';
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
@@ -24,7 +24,7 @@ function render(){
  $('mission').classList.toggle('complete',s.relic);$('mission-return').hidden=!s.relic;$('mission-return').disabled=s.phase==='battle';
  const battle=s.phase==='battle';$('explore-controls').hidden=battle;$('battle-controls').hidden=!battle;$('enemy-hud').hidden=!battle;$('potion').disabled=!s.potions||s.hp===100;
  $('enemy-hud').classList.toggle('boss',Boolean(s.enemy?.boss));
- if(battle){$('encounter-label').textContent=s.enemy.boss?'最深部のボス · 退避不可':'魔物との遭遇';$('enemy-name').textContent=s.enemy.name;$('enemy-hp').style.width=`${s.enemy.hp/s.enemy.maxHp*100}%`;$('intent').textContent=s.enemy.turn%3===2?'強撃の構え！「身を守る」が有効':'こちらの行動後に、魔物が反撃する';document.querySelector('[data-action="skill"]').disabled=s.focus<3;$('battle-potion').disabled=!s.potions||s.hp===100;$('battle-potion-count').textContent=`×${s.potions}`;$('battle-potion').setAttribute('aria-label',`露の薬、残り${s.potions}個、体力42回復`);$('flee').disabled=s.enemy.boss;}
+ if(battle){$('encounter-label').textContent=s.enemy.boss?'最深部のボス · 退避不可':'魔物との遭遇';$('enemy-name').textContent=s.enemy.name;$('enemy-hp').style.width=`${s.enemy.hp/s.enemy.maxHp*100}%`;$('intent').textContent=s.enemy.turn%3===2?'強撃の構え！「身を守る」が有効':'こちらの行動後に、魔物が反撃する';document.querySelector('[data-action="skill"]').disabled=s.focus<3;$('battle-potion').disabled=!s.potions||s.hp===100;$('battle-potion-count').textContent=`×${s.potions}`;$('battle-potion').setAttribute('aria-label',`露の薬、残り${s.potions}個、体力最大42回復`);$('flee').disabled=s.enemy.boss;}
  const total=s.map.grid.flat().filter(v=>!v).length;$('map-percent').textContent=`${Math.round(Object.keys(s.map.visited).length/total*100)}%`;
  drawView();drawMap($('map'),s);
  if(s.relic&&s.phase==='explore'&&!relicNoticeShown&&!dialog.open){relicNoticeShown=true;open('<span class="eyebrow">守り手を撃破</span><h2 id="dialog-title">星の種を手に入れた！</h2><p>最深部のボスを倒しました。あと一歩で探索完了です。<br><strong>「帰路の灯」で森の外へ持ち帰ろう。</strong></p><button class="primary" data-modal="return">帰路の灯で帰還・クリア</button><button data-modal="close">もう少し探索する</button>','relic');}
@@ -44,7 +44,7 @@ function dispatch(action){
  }
  render();
 }
-function stairs(){open(`<span class="eyebrow">AT THE CROSSROADS</span><h2 id="dialog-title">もっと、深い森へ。</h2><p>第${state.floor+1}層へ続く階段。進むとこの層には戻れません。<br>階段で体力18・灯り25・気力が回復します。</p><p>体力 ${state.hp} / 100　・　露の薬 ${state.potions}個<br>手元の結晶 ${state.gold}個を持ち帰ることもできます。</p><button class="primary" data-modal="descend">第${state.floor+1}層へ進む</button><button data-modal="return">ここで帰還する</button><button data-modal="stay">この層をもう少し探索</button>`,'stairs');}
+function stairs(){open(`<span class="eyebrow">AT THE CROSSROADS</span><h2 id="dialog-title">もっと、深い森へ。</h2><p>第${state.floor+1}層へ続く階段。進むとこの層には戻れません。<br>階段で体力は最大18、灯りは最大25、気力は上限まで回復します。</p><p>体力 ${state.hp} / 100　・　露の薬 ${state.potions}個<br>手元の結晶 ${state.gold}個を持ち帰ることもできます。</p><button class="primary" data-modal="descend">第${state.floor+1}層へ進む</button><button data-modal="return">ここで帰還する</button><button data-modal="stay">この層をもう少し探索</button>`,'stairs');}
 function result(){const won=state.phase==='won',dead=state.phase==='dead';open(`<span class="eyebrow">${won?'EXPEDITION COMPLETE':dead?'THE LIGHT FADES':'SAFE RETURN'}</span><h2 id="dialog-title">${won?'星を、持ち帰った。':dead?'灯りは、森の中へ。':'生きて帰る。それも冒険。'}</h2><p>${won?'あなたの灯りに、小さな星が宿った。星眠りの森の探索は、ここに完了です。':dead?'今回の戦利品は森に残されました。次の探索では、薬と帰路の灯を早めに使ってみよう。':'最深部には届かなくても、刻んだ地図と結晶は確かな収穫です。次は、もう一歩先へ。'}</p><div class="result"><div>持ち帰った結晶<strong>${dead?0:state.gold}</strong></div><div>到達した深さ<strong>第${state.floor}層</strong></div><div>歩いた距離<strong>${state.steps}歩</strong></div><div>退けた魔物<strong>${state.kills}体</strong></div></div><button class="primary" data-modal="retry">新しい森を探索する</button><button data-modal="title">タイトルに戻る</button>`,'result');}
 $('start').onclick=()=>{if(saved&&!['dead','won','returned'].includes(saved.phase)){open('<h2 id="dialog-title">新しい探索を始める？</h2><p>保存されている探索を上書きします。</p><button class="primary" data-modal="new">新しく始める</button><button data-modal="close">やめる</button>','new');}else start();};
 $('continue').onclick=()=>start(true);
