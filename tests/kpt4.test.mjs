@@ -5,7 +5,7 @@ import {fresh as freshNew,act,DIRS,key,restore,serialize} from '../src/game.js';
 import {returnDescription,lightBand,lightAnnouncement} from '../src/messages.js';
 test('return copy distinguishes reaching floor3 without claiming a relic',()=>{
  for(const floor of [1,2])assert.match(returnDescription(floor),/届かなくても/);
- assert.match(returnDescription(3),/最深部には到達/);assert.match(returnDescription(3),/星の種はまだ/);assert.doesNotMatch(returnDescription(3),/届かなくても/);
+ assert.match(returnDescription(3),/最深部には到達/);assert.match(returnDescription(3),/灯草の種はまだ/);assert.doesNotMatch(returnDescription(3),/届かなくても/);
 });
 test('upper tier resources improve modestly with the same 70/25/5 probabilities',()=>{
  const probability={common:.7,silver:.25,gold:.05};let potions=0,light=0;

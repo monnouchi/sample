@@ -1,8 +1,9 @@
-import {say,migrateDialogue} from './dialogue.js?v=20261001-input-boundaries';
-import {GEAR,restoreKit,grantFind} from './loot.js?v=20261001-input-boundaries';
-import {COMPANIONS,maxFloor} from './companions.js?v=20261001-input-boundaries';
-import {LAYERS,layersFor} from './story.js?v=20261001-input-boundaries';
-import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-input-boundaries';
+import {intent} from './boss.js?v=20261001-guardian';
+import {say,migrateDialogue} from './dialogue.js?v=20261001-guardian';
+import {GEAR,restoreKit,grantFind} from './loot.js?v=20261001-guardian';
+import {COMPANIONS,maxFloor} from './companions.js?v=20261001-guardian';
+import {LAYERS,layersFor} from './story.js?v=20261001-guardian';
+import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-guardian';
 export const SIZE = 11;
 export const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
 export const FLOORS = LAYERS.map(l=>l.title);
@@ -30,7 +31,7 @@ export function generate(seed, floor=1, depth=10) {
 export function reveal(s){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=s.x+dx,y=s.y+dy;if(x>=0&&y>=0&&x<SIZE&&y<SIZE)s.map.seen[key(x,y)]=true;}s.map.visited[key(s.x,s.y)]=true;}
 export function fresh(seed=Math.floor(Math.random()*4294967296),{legacy=false,companion='ao'}={}){
  if(!legacy&&!Object.hasOwn(COMPANIONS,companion))throw new Error('同行者を選んでください');
- const s={version:legacy?1:2,...(legacy?{}:{companion,supportCharge:0,supportLog:'',rested:[]}),seed:seed>>>0,rng:seed>>>0,phase:'explore',floor:1,x:1,y:1,dir:1,hp:100,maxHp:100,focus:6,light:100,potions:3,gold:0,steps:0,kills:0,relic:false,lastMiss:false,lastAttack:null,ambientSeen:[],gearOwned:[],equipment:null,ward:0,wardFound:false,lastRescue:false,eventNotice:'',rewards:[],pendingReward:null,map:generate(seed,1,legacy?3:10),enemy:null,log:['町の翠灯を灯し直すため、星の種が眠る地下庭へ。'],previous:[1,1]};
+ const s={version:legacy?1:2,...(legacy?{}:{companion,supportCharge:0,supportLog:'',rested:[]}),seed:seed>>>0,rng:seed>>>0,phase:'explore',floor:1,x:1,y:1,dir:1,hp:100,maxHp:100,focus:6,light:100,potions:3,gold:0,steps:0,kills:0,relic:false,lastMiss:false,lastAttack:null,ambientSeen:[],gearOwned:[],equipment:null,ward:0,wardFound:false,lastRescue:false,eventNotice:'',rewards:[],pendingReward:null,map:generate(seed,1,legacy?3:10),enemy:null,log:['町の翠灯を灯し直すため、灯草の種が眠る地下庭へ。'],previous:[1,1]};
  if(s.map.grid[1][2])s.dir=2;if(!legacy){s.dialogueSchema=1;s.dialogue=COMPANIONS[companion].intro;s.log=['第1層の探索を始めた。'];}reveal(s);return s;
 }
 function roll(s,n){s.rng=(Math.imul(s.rng,1664525)+1013904223)>>>0;return s.rng%n;}
@@ -38,11 +39,11 @@ function recover(s,field,amount,max){const before=s[field];s[field]=Math.min(max
 function recovery(label,amount){return amount?`${label}が${amount}回復`:`${label}は満タン（回復なし）`;}
 function log(s,t,notice=false){s.log=[t,...s.log].slice(0,4);s.eventNotice=notice?t:'';}
 function hurt(s,n){s.hp=Math.max(0,s.hp-n);if(!s.hp&&s.ward===1){s.ward=0;s.hp=25;s.lastRescue=true;return;}if(!s.hp){s.phase='dead';log(s,'灯りが遠のく。探索は、ここで終わった。');}}
-function encounter(s,boss=false){s.lastAttack=null;const names=['苔角の獣','宵羽の蛾','根絡みの番人'];const hp=s.version===2?(boss?90:20+s.floor*2):(boss?65:19+s.floor*6);s.enemy={name:boss?'星樹の守り手':names[roll(s,3)],hp,maxHp:hp,turn:0,boss};s.phase='battle';if(s.version===2)s.supportLog='';log(s,boss?'最後の種を託す者か、星樹の守り手が試している。':`${s.enemy.name}が道をふさいだ。`);}
+function encounter(s,boss=false){s.lastAttack=null;const names=['苔角の獣','宵羽の蛾','根絡みの番人'];const hp=s.version===2?(boss?90:20+s.floor*2):(boss?65:19+s.floor*6);s.enemy={name:boss?'星樹の守り手':names[roll(s,3)],hp,maxHp:hp,turn:0,boss,...(boss&&s.version===2?{pattern:1}:{})};s.phase='battle';if(s.version===2)s.supportLog='';log(s,boss?'守り手が絡む根に引かれて暴れている。根を断って鎮めよう。':`${s.enemy.name}が道をふさいだ。`);}
 export function act(s,action){if(!s)return false;const previous=s.lastRescue,previousNotice=s.eventNotice;s.lastRescue=false;s.eventNotice='';const ok=performAction(s,action);if(!ok){s.lastRescue=previous;s.eventNotice=previousNotice;}return ok;}
 function performAction(s,action){
  if(!s||['dead','won','returned'].includes(s.phase))return false;
- if(action==='return' && s.phase!=='battle'){s.phase=s.relic?'won':'returned';log(s,s.relic?'星の種を抱え、森の外へ帰還した。':'帰路の灯に導かれ、無事に森を出た。');return true;}
+ if(action==='return' && s.phase!=='battle'){s.phase=s.relic?'won':'returned';log(s,s.relic?'灯草の種を抱え、森の外へ帰還した。':'帰路の灯に導かれ、無事に森を出た。');return true;}
  if(s.phase==='battle')return battle(s,action);
  if(typeof action==='string'&&action.startsWith('equip:')&&s.phase==='explore'){const id=action.slice(6);if(!s.gearOwned.includes(id)||s.equipment===id)return false;s.equipment=id;log(s,`${GEAR[id].name}を装備。${GEAR[id].effect}`,true);return true;}
  if(action==='rest'&&s.version===2&&s.phase==='explore'&&s.map.events[key(s.x,s.y)]==='rest'&&[4,8].includes(s.floor)&&!s.rested.includes(s.floor)){const hp=recover(s,'hp',100,100),light=recover(s,'light',100,100),focus=recover(s,'focus',6,6);s.potions+=2;s.rested.push(s.floor);s.map.events[key(s.x,s.y)]='rest-used';say(s,'休めたね。準備ができたら、また一緒に進もう。');log(s,`休憩所で補給。${recovery('体力',hp)}。${recovery('灯り',light)}。${recovery('気力',focus)}。薬を2個補充した。`,true);return true;}
@@ -95,6 +96,7 @@ function battle(s,a){
  let dmg=kind==='miss'?0:kind==='critical'?Math.round(base*1.5):base;
  if(s.equipment==='blade'&&a==='attack'&&kind!=='miss')dmg+=2;
  if(s.version===2&&s.companion==='ren'&&a==='skill'&&kind!=='miss'){dmg+=4;s.supportLog='レン：共鳴 +4ダメージ';}
+ if(intent(e)==='opening'&&kind!=='miss')dmg+=6;
  s.lastMiss=kind==='miss';s.lastAttack={kind,damage:dmg};
  if(a==='skill')s.focus-=3;e.hp=Math.max(0,e.hp-dmg);
  message=`${a==='skill'?'翠の一閃':'短剣の一撃'}。${kind==='miss'?'ミス！ ダメージなし':kind==='critical'?`クリティカル！ ${dmg}のダメージ`:`${dmg}のダメージ`}。`;
@@ -102,8 +104,9 @@ function battle(s,a){
  }else s.lastAttack=null;
  if(a==='potion'){s.potions--;const hp=recover(s,'hp',42,100);message=`露の薬による回復：${recovery('体力',hp)}。`;}
  if(a==='guard'){const focus=recover(s,'focus',2,6);message=`身を守った。${recovery('気力',focus)}。`;}
- if(e.hp<=0){s.kills++;s.gold+=e.boss?100:8+s.floor*4;s.focus=Math.min(6,s.focus+1);delete s.map.events[key(s.x,s.y)];s.phase='explore';if(e.boss){s.relic=true;message+=' 星の種を手に入れた！ 帰路の灯を使おう。';}else message+=' 魔物を退けた。';s.enemy=null;supportHeal(s);log(s,message+(s.supportLog?` ${s.supportLog}。`:''),true);return true;}
- const heavy=e.turn%3===2;let damage=(s.version===2?(e.boss?10:4+Math.floor((s.floor-1)/3)):(e.boss?9:3+s.floor))+roll(s,4);if(heavy)damage*=2;if(a==='guard')damage=Math.max(1,Math.floor(damage/4));if(s.version===2&&s.companion==='ao'){const reduction=Math.min(2,damage-1);damage-=reduction;s.supportLog=reduction?`アオ：かばう 被害−${reduction}`:'アオ：守りを重ねた（追加軽減なし）';}
+ if(e.hp<=0){s.kills++;s.gold+=e.boss?100:8+s.floor*4;s.focus=Math.min(6,s.focus+1);delete s.map.events[key(s.x,s.y)];s.phase='explore';if(e.boss){s.relic=true;say(s,({ao:'根がほどけた。種を守って、町へ帰ろう。',mei:'守り手が落ち着いたね。この種を、みんなで育てよう。',ren:'小さな種にも光がある。次は町で灯そう。'})[s.companion]);message+=' 絡む根がほどけ、守り手が静まった。灯草の種を手に入れた！ 帰路の灯を使おう。';}else message+=' 魔物を退けた。';s.enemy=null;supportHeal(s);log(s,message+(s.supportLog?` ${s.supportLog}。`:''),true);return true;}
+ const phase=intent(e),heavy=phase==='heavy';if(phase==='opening'){e.turn++;supportHeal(s);log(s,`${message} 守り手は体勢を戻している。反撃なし。`);return true;}
+ let damage=(s.version===2?(e.boss?10:4+Math.floor((s.floor-1)/3)):(e.boss?9:3+s.floor))+roll(s,4);if(heavy)damage*=2;if(e.pattern===1&&heavy&&a==='skill'&&s.lastAttack.kind!=='miss'){damage=Math.floor(damage/2);message+=' 絡む根を緩め、強撃の威力を半減。';}if(a==='guard')damage=Math.max(1,Math.floor(damage/4));if(s.version===2&&s.companion==='ao'){const reduction=Math.min(2,damage-1);damage-=reduction;s.supportLog=reduction?`アオ：かばう 被害−${reduction}`:'アオ：守りを重ねた（追加軽減なし）';}
  if(s.equipment==='bark')damage=Math.max(1,damage-1);
  e.turn++;hurt(s,damage);supportHeal(s);if(s.phase!=='dead')log(s,`${message} 敵の${heavy?'強撃':'反撃'}：体力に${damage}ダメージ。`);return true;
 }
@@ -120,11 +123,14 @@ export function restore(raw){
  if(!Array.isArray(s.log)||s.log.length>4||s.log.some(t=>typeof t!=='string'||t.length>200))return null;
  if(s.phase==='battle'&&(!s.enemy||typeof s.enemy.name!=='string'||s.enemy.name.length>40||!int(s.enemy.hp,1,100)||!int(s.enemy.maxHp,1,100)||s.enemy.hp>s.enemy.maxHp||!int(s.enemy.turn,0,100000)||typeof s.enemy.boss!=='boolean'))return null;
  if(s.version===2){if(!Object.hasOwn(COMPANIONS,s.companion))return null;s.dialogue=typeof s.dialogue==='string'&&s.dialogue.length<=200?s.dialogue:COMPANIONS[s.companion].intro;s.rested=Array.isArray(s.rested)?[...new Set(s.rested.filter(f=>[4,8].includes(f)&&f<=s.floor))]:[];s.supportCharge=s.supportCharge===1?1:0;s.supportLog=typeof s.supportLog==='string'&&s.supportLog.length<70?s.supportLog:'';if(s.rested.includes(s.floor)&&s.map.events['1,1']==='rest')s.map.events['1,1']='rest-used';}
+ if(s.enemy&&s.enemy.pattern!==1)delete s.enemy.pattern;
+ for(const field of ['dialogue','eventNotice'])if(typeof s[field]==='string')s[field]=s[field].replaceAll('星の種','灯草の種');s.log=s.log.map(t=>t.replaceAll('星の種','灯草の種'));
+ const oldStory=['庭守が使った休憩所だ。入口で一度だけ、体力・灯り・気力を戻し、薬を2個もらえる。','最後の休憩所だ。入口で一度だけ休める。あと二層、帰りの灯も忘れずに。','最後の種を守る者がいる。種を託すに足るか、僕たちを試すつもりだ。受け継いだら町へ帰ろう。'];const storyIndex=oldStory.indexOf(s.dialogue);if(storyIndex>=0&&s.version===2)s.dialogue=LAYERS[[3,7,9][storyIndex]].text;
  s.eventNotice=typeof s.eventNotice==='string'&&s.eventNotice.length<=200?s.eventNotice:'';migrateDialogue(s);
  // Older saves have no delivery history: avoid replaying a possibly heard current-floor line.
  s.ambientSeen=Array.isArray(s.ambientSeen)?[...new Set(s.ambientSeen.filter(f=>int(f,1,s.floor)))]:s.steps>=4?[s.floor]:[];
  if(s.strikeRng!==undefined&&!int(s.strikeRng,0,4294967295))return null;
- s.lastMiss=s.lastMiss===true;s.lastAttack=s.lastAttack&&['normal','miss','critical'].includes(s.lastAttack.kind)&&int(s.lastAttack.damage,0,50)?s.lastAttack:null;
+ s.lastMiss=s.lastMiss===true;s.lastAttack=s.lastAttack&&['normal','miss','critical'].includes(s.lastAttack.kind)&&int(s.lastAttack.damage,0,54)?s.lastAttack:null;
  s.rewards=restoreRewards(s.rewards,maxFloor(s));restoreKit(s);s.pendingReward=typeof s.pendingReward==='string'&&s.rewards.some(r=>r.id===s.pendingReward)?s.pendingReward:null;
  s.log=s.log.map(t=>t.replaceAll('帰還の糸','帰路の灯'));
  return s;

@@ -5,7 +5,7 @@ export function actionCues(before, after, action) {
   if(action==='attack'||action==='skill')cues.push(action==='skill'?(after.lastAttack?.kind==='miss'?'spell-miss':after.lastAttack?.kind==='critical'?'spell-critical':'skill'):(after.lastAttack?.kind==='miss'?'miss':after.lastAttack?.kind==='critical'?'critical':'attack'));
   if(action==='potion')cues.push('potion');
   if(action==='flee')cues.push('flee');
-  else if(after.enemy&&after.enemy.turn>before.turn)cues.push(action==='guard'?'guard':before.turn%3===2?'heavy':'hurt');
+  else if(after.enemy&&after.enemy.turn>before.turn&&before.intent!=='opening')cues.push(action==='guard'?'guard':(before.intent?before.intent==='heavy':before.turn%3===2)?'heavy':'hurt');
   if(after.kills>before.kills)cues.push(after.relic&&!before.relic?'relic':'victory');
  }else{
   if(after.steps>before.steps)cues.push('step');

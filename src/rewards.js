@@ -1,4 +1,4 @@
-import {restoreFind} from './loot.js?v=20261001-input-boundaries';
+import {restoreFind} from './loot.js?v=20261001-guardian';
 export const CHESTS={
  common:{name:'苔木の宝箱',mark:'Ⅰ',color:'#c2ad7e',potions:1,lightMax:10},
  silver:{name:'月銀の宝箱',mark:'Ⅱ',color:'#c5e1e8',potions:1,lightMax:15},

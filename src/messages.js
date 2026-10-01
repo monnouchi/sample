@@ -1,5 +1,5 @@
 export function returnDescription(floor,depth=3){
- return floor===depth?'最深部には到達しました。星の種はまだですが、地図と結晶を持って無事に帰還です。次は守り手への挑戦を。':'最深部には届かなくても、刻んだ地図と結晶は確かな収穫です。次は、もう一歩先へ。';
+ return floor===depth?'最深部には到達しました。灯草の種はまだですが、地図と結晶を持って無事に帰還です。次は守り手への挑戦を。':'最深部には届かなくても、刻んだ地図と結晶は確かな収穫です。次は、もう一歩先へ。';
 }
 export function lightBand(light){return light===0?'dark':light===1?'last':light<=10?'low':'safe';}
 export function lightAnnouncement(band,previous){

@@ -1,4 +1,4 @@
-"""Fixtures inject maps only; transition tests use native taps plus queued/held-input cases."""
+"""Fixtures inject maps only; queued pairs fix 40ms intervals in-page to avoid host-driver latency. Other actions use native taps/keys."""
 from functools import partial
 from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
 from threading import Thread
@@ -18,21 +18,23 @@ try:
   def burst(sel,n=5):
    for _ in range(n):
     box=page.locator(sel).bounding_box();page.touchscreen.tap(box['x']+box['width']/2,box['y']+box['height']/2);page.wait_for_timeout(40)
+  def queued_pair(trigger,target):
+   return page.evaluate("""async ({trigger,target})=>{document.querySelector(trigger).click();const saved=JSON.parse(localStorage.getItem('suito-save-v1'));for(let i=0;i<5;i++){const b=document.querySelector(target);b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:89,pointerType:'touch'}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:89,pointerType:'touch'}));b.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,detail:1}));await new Promise(r=>setTimeout(r,40));}return saved;}""",{'trigger':trigger,'target':target})
   # Demonstrate the unsafe pre-fix path with its actual app/control modules.
   page.route('**/src/app.js?*',lambda r:r.fulfill(body=check_output(['git','show','7137b0f:src/app.js'],text=True),content_type='text/javascript'))
   page.route('**/src/controls.js?*',lambda r:r.fulfill(body=check_output(['git','show','7137b0f:src/controls.js'],text=True),content_type='text/javascript'))
   fixture();tap('[data-action=forward]');tap('[data-modal=return]');assert state()['phase']=='returned'
   print('REPRODUCED pre-fix: movement→stairs→immediate modal return ends adventure without confirmation',flush=True)
   page.unroute('**/src/app.js?*');page.unroute('**/src/controls.js?*')
-  fixture();tap('[data-action=forward]');entered=state();assert entered['phase']=='stairs'
-  burst('[data-modal=return]');assert state()==entered;assert page.locator('#dialog').get_attribute('data-kind')=='stairs'
-  page.wait_for_timeout(420);tap('[data-modal=descend]');assert state()['floor']==2;arrived=state()
-  burst('#return');assert state()==arrived;expect(page.locator('#dialog')).not_to_be_visible()
-  page.wait_for_timeout(420);tap('#return');burst('[data-modal=return]');assert state()==arrived
+  fixture();entered=queued_pair('[data-action=forward]','[data-modal=return]');assert entered['phase']=='stairs'
+  assert state()==entered;assert page.locator('#dialog').get_attribute('data-kind')=='stairs'
+  page.wait_for_timeout(420);arrived=queued_pair('[data-modal=descend]','#return');assert state()['floor']==2
+  assert state()==arrived;expect(page.locator('#dialog')).not_to_be_visible()
+  page.wait_for_timeout(420);queued_pair('#return','[data-modal=return]');assert state()==arrived
   page.wait_for_timeout(420);tap('[data-modal=return]');assert state()['phase']=='returned'
   print('PASS stairs/descend/return: continuing bursts rejected; fresh deliberate confirmation returns',flush=True)
   # Stair return now asks for confirmation, cancellation returns to the stair choice.
-  fixture(phase='stairs');tap('[data-modal=return]');burst('[data-modal=return]');assert state()['phase']=='stairs'
+  fixture(phase='stairs');queued_pair('[data-modal=return]','[data-modal=return]');assert state()['phase']=='stairs'
   page.wait_for_timeout(420);tap('[data-modal=close]');assert page.locator('#dialog').get_attribute('data-kind')=='stairs'
   page.wait_for_timeout(420);tap('[data-modal=stay]');assert state()['phase']=='explore'
   # Held second finger plus queued click, keyboard repeats and cancelled pointers.
@@ -48,11 +50,11 @@ try:
   # Chest overlay blocks carry-over close, then closing cannot spill into return.
   fixture('chest');page.evaluate("document.querySelector('[data-action=right]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:99,pointerType:'touch'}))")
   tap('[data-action=forward]');earned=state();burst('[data-modal=reward-close]');assert state()==earned;expect(page.locator('#dialog')).to_be_visible()
-  page.evaluate("document.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerId:99,pointerType:'touch'}))");page.wait_for_timeout(420);tap('[data-modal=reward-close]');burst('#return');expect(page.locator('#dialog')).not_to_be_visible();assert state()['phase']=='explore'
+  page.evaluate("document.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerId:99,pointerType:'touch'}))");page.wait_for_timeout(420);queued_pair('[data-modal=reward-close]','#return');expect(page.locator('#dialog')).not_to_be_visible();assert state()['phase']=='explore'
   # Facility/optional modal boundaries and resumed stair modal remain guarded.
-  page.wait_for_timeout(420);tap('#kit');burst('[data-modal=close]');expect(page.locator('#dialog')).to_be_visible()
-  page.wait_for_timeout(420);tap('[data-modal=close]');burst('#return');expect(page.locator('#dialog')).not_to_be_visible()
-  fixture(phase='stairs');page.reload();tap('#continue');burst('[data-modal=return]');assert state()['phase']=='stairs';assert page.locator('#dialog').get_attribute('data-kind')=='stairs'
+  page.wait_for_timeout(420);queued_pair('#kit','[data-modal=close]');expect(page.locator('#dialog')).to_be_visible()
+  page.wait_for_timeout(420);queued_pair('[data-modal=close]','#return');expect(page.locator('#dialog')).not_to_be_visible()
+  fixture(phase='stairs');page.reload();queued_pair('#continue','[data-modal=return]');assert state()['phase']=='stairs';assert page.locator('#dialog').get_attribute('data-kind')=='stairs'
   # Entering/leaving the camp panel is a layout/input boundary too.
   page.goto(url);page.evaluate("""async()=>{const {fresh,generate}=await import('./src/game.js');const s=fresh(3,{companion:'mei'});s.floor=4;s.hp=30;s.map=generate(s.seed,4);s.map.events={'1,1':'rest'};s.dir=s.map.grid[1][2]?2:1;localStorage.setItem('suito-save-v1',JSON.stringify(s));}""")
   page.reload();tap('#continue');page.wait_for_timeout(420);tap('[data-action=forward]');page.wait_for_timeout(420);tap('[data-action=back]')
@@ -65,7 +67,7 @@ try:
   page.wait_for_timeout(420);tap('#return');page.reload();tap('#continue');page.wait_for_timeout(420);assert state()['phase']=='explore';assert page.evaluate("localStorage.getItem('suito-save-v1')")==before
   # Relic return and its persistent mission button both require the same confirmation.
   page.goto(url);page.evaluate("""()=>{const s=JSON.parse(localStorage.getItem('suito-save-v1'));s.relic=true;localStorage.setItem('suito-save-v1',JSON.stringify(s));}""");page.reload();tap('#continue');page.wait_for_timeout(420)
-  tap('[data-modal=return]');assert page.locator('#dialog-title').inner_text()=='本当に帰還する？';burst('[data-modal=return]');assert state()['phase']=='explore'
+  queued_pair('[data-modal=return]','[data-modal=return]');assert page.locator('#dialog-title').inner_text()=='本当に帰還する？';assert state()['phase']=='explore'
   page.wait_for_timeout(420);tap('[data-modal=close]');page.wait_for_timeout(420);tap('#mission-return');assert page.locator('#dialog-title').inner_text()=='本当に帰還する？'
   page.wait_for_timeout(420);tap('[data-modal=return]');assert state()['phase']=='won'
   print('PASS held touch/cancel/delayed click/key repeats, chest/kit/reload boundaries; old save retained',flush=True)

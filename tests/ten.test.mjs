@@ -1,3 +1,4 @@
+import {intent} from '../src/boss.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fresh,generate,act,restore,serialize,key,DIRS,floorName} from '../src/game.js';
@@ -7,7 +8,7 @@ export function expedition(seed,companion){let s=fresh(seed,{companion}),turns=0
  if([4,8].includes(floor)){assert.ok(act(s,'rest'));uses++;const before=serialize(s);assert.equal(act(s,'rest'),false);assert.equal(serialize(s),before);}
  const restored=restore(serialize(s));assert.deepEqual(restored,s);s=restored;
  for(const d of route(s,s.map.exit)){while(s.dir!==d)act(s,'right');act(s,'forward');
-  while(s.phase==='battle'){turns++;if(turns>200)throw Error('infinite fight');const a=s.hp<=40&&s.potions?'potion':s.enemy.turn%3===2?'guard':s.focus>=3?'skill':'attack';act(s,a);const r=restore(serialize(s));assert.ok(r);assert.deepEqual(r,s);s=r;}
+  while(s.phase==='battle'){turns++;if(turns>200)throw Error('infinite fight');const a=s.hp<=40&&s.potions?'potion':intent(s.enemy)==='heavy'?'guard':s.focus>=3?'skill':'attack';act(s,a);const r=restore(serialize(s));assert.ok(r);assert.deepEqual(r,s);s=r;}
   if(s.phase==='dead')return {won:false,turns,hp:0,floor,seed,companion};
  }
  if(floor<10){assert.equal(s.phase,'stairs');assert.ok(act(s,'descend'));}else{assert.equal(s.relic,true);assert.ok(act(s,'return'));}

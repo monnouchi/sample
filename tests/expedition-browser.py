@@ -14,9 +14,9 @@ try:
  with sync_playwright() as p:
   b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':390,'height':844},has_touch=True)
   errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(f'http://127.0.0.1:{server.server_port}');page.locator('#sound').tap();page.locator('#start').tap();page.locator(f'[data-modal=companion-{os.environ.get("COMPANION","ao")}]').tap();page.wait_for_timeout(250)
+  page.goto(f'http://127.0.0.1:{server.server_port}');page.locator('#sound').tap();page.locator('#start').tap();page.wait_for_timeout(420);page.locator(f'[data-modal=companion-{os.environ.get("COMPANION","ao")}]').tap();page.wait_for_timeout(420)
   state=lambda:page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")
-  def press(selector):page.locator(selector).tap();page.wait_for_timeout(400 if 'attack' in selector or 'skill' in selector else 230)
+  def press(selector):page.locator(selector).tap();page.wait_for_timeout(420)
   last_floor=0
   dirs=[(0,-1),(1,0),(0,1),(-1,0)];actions=0;resumed=False
   for _ in range(1100):
@@ -37,7 +37,7 @@ try:
    if s['phase']=='explore' and s['floor'] in [4,8] and s['floor'] not in s['rested'] and s['x']==1 and s['y']==1:
     press('#rest');continue
    if s['phase']=='battle':
-    a='potion' if s['hp']<=40 and s['potions'] else 'guard' if s['enemy']['turn']%3==2 else 'skill' if s['focus']>=3 else 'attack'
+    a='potion' if s['hp']<=40 and s['potions'] else 'guard' if s['enemy']['turn']%3==(1 if s['enemy'].get('pattern')==1 else 2) else 'skill' if s['focus']>=3 else 'attack'
    elif s['relic']:
     press('#mission-return');press('[data-modal=return]');continue
    else:
@@ -53,7 +53,7 @@ try:
    press(f'[data-action="{a}"]');actions+=1
   s=state();assert s['phase']=='won' and s['relic'] and resumed
   assert s['floor']==10 and s['rested']==[4,8] and not errors
-  assert '星を、持ち帰った。' in page.locator('#dialog-title').inner_text()
+  assert '灯を、育てよう。' in page.locator('#dialog-title').inner_text()
   print(f'PASS UI full run (map-guided, no state injection): seed={s["seed"]}, companion={s['companion']}, rested={s['rested']}, steps={s["steps"]}, kills={s["kills"]}, chests={len(s["rewards"])}, gold={s["gold"]}, hp={s["hp"]}, actions={actions}, reload/resume, boss and return victory',flush=True)
   b.close()
 finally:server.shutdown();server.server_close()

@@ -15,7 +15,7 @@ test('conversation and event outputs stay separate on start, movement, descent, 
 test('legacy conversation migration retains recovery, unknown events and important seed results',()=>{
  const s=fresh(3,{companion:'mei'});delete s.dialogueSchema;
  s.log=[`メイ「${COMPANIONS.mei.intro}」`,`第2層へ。メイ「${LAYERS[1].text}」体力が18回復。`,`メイ「休めたね。体力が80回復。薬を2個補充した。」`,'星の種を手に入れた！'];
- const out=copy(s);assert.equal(out.log.length,3);assert.match(out.log[0],/体力が18回復/);assert.match(out.log[1],/体力が80回復/);assert.match(out.log[2],/星の種/);assert.deepEqual(copy(out),out);
+ const out=copy(s);assert.equal(out.log.length,3);assert.match(out.log[0],/体力が18回復/);assert.match(out.log[1],/体力が80回復/);assert.match(out.log[2],/灯草の種/);assert.deepEqual(copy(out),out);
  delete s.dialogueSchema;s.log=[`宝箱の刻文：メイ「${COMPANIONS.mei.intro}」`];assert.deepEqual(copy(s).log,s.log);
  const old=fresh(1,{legacy:true});assert.deepEqual(copy(old).log,old.log);
 });

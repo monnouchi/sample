@@ -55,7 +55,7 @@ try:
    page.locator('#last-result' if phase=='won' else '#continue').tap();page.wait_for_timeout(420)
    assert page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1')).version")==1
    if phase=='won':
-    expect(page.locator('#dialog-title')).to_have_text('星を、持ち帰った。');page.locator('[data-modal=retry]').tap();page.wait_for_timeout(420);page.locator('[data-modal=close]').tap();page.wait_for_timeout(420);expect(page.locator('#dialog-title')).to_have_text('星を、持ち帰った。')
+    expect(page.locator('#dialog-title')).to_have_text('灯を、育てよう。');page.locator('[data-modal=retry]').tap();page.wait_for_timeout(420);page.locator('[data-modal=close]').tap();page.wait_for_timeout(420);expect(page.locator('#dialog-title')).to_have_text('灯を、育てよう。')
    else:assert '最深部' in page.locator('#floor-label').inner_text()
   print('PASS legacy third-floor continuation and completed-result reread/cancel without overwriting',flush=True)
   browser.close()

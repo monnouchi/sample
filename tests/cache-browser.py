@@ -29,7 +29,7 @@ try:
    page.reload();page.wait_for_timeout(500)
    assert not errors,errors
    assert page.locator('#event-history').count()==1 and page.locator('#event-notice').count()==1
-   assert 'input-boundaries' in page.locator('link[rel=stylesheet]').get_attribute('href')
+   assert 'guardian' in page.locator('link[rel=stylesheet]').get_attribute('href')
    page.locator('#continue').tap();page.wait_for_timeout(420);expect(page.locator('#play')).to_be_visible()
    s=page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))");assert (s['seed'],s['hp'],s['gold'])==(31,73,51)
    page.locator('#event-history').tap();page.wait_for_timeout(420);page.locator('[data-modal=close]').tap();page.wait_for_timeout(420)
