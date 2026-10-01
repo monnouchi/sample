@@ -1,7 +1,7 @@
 export const CHESTS={
- common:{name:'苔木の宝箱',mark:'Ⅰ',color:'#c2ad7e'},
- silver:{name:'月銀の宝箱',mark:'Ⅱ',color:'#c5e1e8'},
- gold:{name:'星金の宝箱',mark:'Ⅲ',color:'#f3d281'}
+ common:{name:'苔木の宝箱',mark:'Ⅰ',color:'#c2ad7e',potions:1,lightMax:10},
+ silver:{name:'月銀の宝箱',mark:'Ⅱ',color:'#c5e1e8',potions:1,lightMax:15},
+ gold:{name:'星金の宝箱',mark:'Ⅲ',color:'#f3d281',potions:2,lightMax:20}
 };
 // Cosmetic/reward tier roll is independent of the combat RNG and map generator.
 export function chestTier(seed,floor,x,y){
@@ -16,8 +16,10 @@ export function restoreRewards(value){
  for(const item of value.slice(0,100)){
   if(!item||typeof item!=='object'||!Number.isInteger(item.floor)||item.floor<1||item.floor>3||!Object.hasOwn(CHESTS,item.tier))continue;
   if(typeof item.id!=='string'||!new RegExp(`^${item.floor}:[1-9],[1-9]$`).test(item.id)||found.has(item.id))continue;
-  if(!Number.isInteger(item.gold)||item.gold<18||item.gold>45||item.potions!==1||!Number.isInteger(item.light)||item.light<0||item.light>10)continue;
-  found.add(item.id);items.push({id:item.id,floor:item.floor,tier:item.tier,gold:item.gold,potions:1,light:item.light});
+  const cap=item.lightMax===undefined?10:item.lightMax;
+  if(![10,CHESTS[item.tier].lightMax].includes(cap)||!Number.isInteger(item.potions)||item.potions<1||item.potions>CHESTS[item.tier].potions)continue;
+  if(!Number.isInteger(item.gold)||item.gold<18||item.gold>45||!Number.isInteger(item.light)||item.light<0||item.light>cap)continue;
+  found.add(item.id);items.push({id:item.id,floor:item.floor,tier:item.tier,gold:item.gold,potions:item.potions,light:item.light,...(item.lightMax===undefined?{}:{lightMax:cap})});
   if(items.length===9)break;
  }
  return items;

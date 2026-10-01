@@ -1,13 +1,14 @@
-import {CHESTS} from './rewards.js?v=20261001-adventure';
+import {returnDescription,lightBand,lightAnnouncement} from './messages.js?v=20261001-kpt4';
+import {CHESTS} from './rewards.js?v=20261001-kpt4';
 import {protectControls} from './controls.js';
-import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js?v=20261001-adventure';
+import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js?v=20261001-kpt4';
 import {drawScene,drawMap} from './render.js?v=20261001-adventure';
 import {cameraAt,beginMotion} from './view.js';
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
 protectControls();
 const titleState=fresh(188);
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-let motion=null,relicNoticeShown=false,rewardTimers=[];
+let motion=null,relicNoticeShown=false,rewardTimers=[],lastLightBand=null;
 function stopRewardTimers(){rewardTimers.forEach(clearTimeout);rewardTimers=[];}
 function revealReward(){stopRewardTimers();document.querySelector('.reward-display')?.classList.add('revealed');const skip=$('reward-skip');if(skip)skip.hidden=true;}
 
@@ -21,12 +22,12 @@ function updateSound(){$('sound').textContent=muted?'音 OFF':'音 ON';$('sound'
 function save(){try{localStorage.setItem(SAVE_KEY,serialize(state));storageOK=true;}catch{storageOK=false;}$('save-status').textContent=storageOK?'自動保存済み':'保存不可 · この画面で継続';}
 function open(content,type){stopRewardTimers();if(dialog.open)dialog.close();modalType=type;$('dialog-content').innerHTML=content;dialog.showModal();}
 function close(){stopRewardTimers();dialog.close();modalType='';}
-function start(resume=false){close();motion=null;relicNoticeShown=false;state=resume&&saved?saved:fresh();$('intro').hidden=true;$('play').hidden=false;$('start-note').hidden=true;$('map-button').hidden=false;save();render();}
+function start(resume=false){close();motion=null;relicNoticeShown=false;lastLightBand=null;$('light-announcement').textContent='';state=resume&&saved?saved:fresh();$('intro').hidden=true;$('play').hidden=false;$('start-note').hidden=true;$('map-button').hidden=false;save();render();}
 function render(){
  if(!state){drawView();$('map-button').hidden=true;return;}
  const s=state;$('floor-label').textContent=`第${s.floor}層${s.floor===3?'・最深部':''} / ${FLOORS[s.floor-1]}`;$('compass').textContent=['N · 北','E · 東','S · 南','W · 西'][s.dir];$('coordinates').textContent=`${String(s.x).padStart(2,'0')} : ${String(s.y).padStart(2,'0')}`;
  $('scene-tag').textContent=s.relic?'THE SEED IS YOURS':s.phase==='battle'?'STAND YOUR GROUND':'FOLLOW THE LITTLE LIGHT';
- $('hp-label').innerHTML=`${s.hp} <small>/ 100</small>`;$('hp-meter').style.width=`${s.hp}%`;$('hp-meter').style.background=s.hp<30?'#df9474':'#adc99e';$('light-label').textContent=s.light;$('light-meter').style.width=`${s.light}%`;$('focus-label').textContent='◆'.repeat(s.focus)+'◇'.repeat(6-s.focus);$('potions').textContent=s.potions;$('message').textContent=s.log[0];$('treasure').textContent=`結晶 ${s.gold} · ${s.steps}歩`;$('objective').textContent=s.relic?'星の種を入手済み！ 帰路の灯で帰還しよう':s.floor===3?'最深部：ボス「星樹の守り手」を倒そう':'目標：第3層のボスを倒し、星の種を持ち帰る';
+ $('hp-label').innerHTML=`${s.hp} <small>/ 100</small>`;$('hp-meter').style.width=`${s.hp}%`;$('hp-meter').style.background=s.hp<30?'#df9474':'#adc99e';$('light-label').textContent=s.light;$('light-meter').style.width=`${s.light}%`;$('focus-label').textContent='◆'.repeat(s.focus)+'◇'.repeat(6-s.focus);$('potions').textContent=s.potions;if($('message').textContent!==s.log[0])$('message').textContent=s.log[0];$('treasure').textContent=`結晶 ${s.gold} · ${s.steps}歩`;$('objective').textContent=s.relic?'星の種を入手済み！ 帰路の灯で帰還しよう':s.floor===3?'最深部：ボス「星樹の守り手」を倒そう':'目標：第3層のボスを倒し、星の種を持ち帰る';
  $('mission').classList.toggle('complete',s.relic);$('mission-return').hidden=!s.relic;$('mission-return').disabled=s.phase==='battle';
  updateLightWarning(s);$('reward-history').textContent=`宝箱の履歴 ${s.rewards?.length||0}/9`;
  const battle=s.phase==='battle';$('explore-controls').hidden=battle;$('battle-controls').hidden=!battle;$('enemy-hud').hidden=!battle;$('potion').disabled=!s.potions||s.hp===100;
@@ -40,12 +41,13 @@ function render(){
  if(['won','dead','returned'].includes(s.phase)&&modalType!=='result')result();
 }
 function updateLightWarning(s){
+ const band=lightBand(s.light);if(band!==lastLightBand){const message=lightAnnouncement(band,lastLightBand);if(message)$('light-announcement').textContent=message;lastLightBand=band;}
  const warning=$('light-warning');warning.hidden=s.light>10;
  if(warning.hidden)return;
  const detail=s.light===0?'灯りが尽きた。移動するたび体力を4失います。':s.light===1?'灯りは残り1。次の一歩で0になり、体力を4失います。':`灯りは残り${s.light}。0になる一歩から、移動ごとに体力を4失います。`;
  warning.textContent=`⚠ ${detail} 旋回は消費なし。${s.phase==='battle'?'戦闘中は灯りを消費しません。':'帰路の灯で帰還することもできます。'}`;
 }
-function rewardItems(r){return `<ul class="reward-items"><li><span aria-hidden="true">◆</span><div><strong>結晶 ×${r.gold}</strong><small>持ち帰ると今回の探索スコアになります。お店での用途はありません。</small></div></li><li><span aria-hidden="true">⚗</span><div><strong>露の薬 ×${r.potions}</strong><small>所持数に追加。使うと体力を最大42回復。</small></div></li><li><span aria-hidden="true">☼</span><div><strong>灯り +${r.light}</strong><small>${r.light?`その場で実際に${r.light}回復しました。`:'すでに満タンのため回復なし。'}（最大10）</small></div></li></ul>`;}
+function rewardItems(r){return `<ul class="reward-items"><li><span aria-hidden="true">◆</span><div><strong>結晶 ×${r.gold}</strong><small>持ち帰ると今回の探索スコアになります。お店での用途はありません。</small></div></li><li><span aria-hidden="true">⚗</span><div><strong>露の薬 ×${r.potions}</strong><small>所持数に追加。使うと体力を最大42回復。</small></div></li><li><span aria-hidden="true">☼</span><div><strong>灯り +${r.light}</strong><small>${r.light?`その場で実際に${r.light}回復しました。`:'すでに満タンのため回復なし。'}（取得時の上限${r.lightMax??10}）</small></div></li></ul>`;}
 function showReward(r){
  if(!r)return;
  const chest=CHESTS[r.tier];
@@ -69,7 +71,7 @@ function dispatch(action){
  render();
 }
 function stairs(){open(`<span class="eyebrow">AT THE CROSSROADS</span><h2 id="dialog-title">もっと、深い森へ。</h2><p>第${state.floor+1}層へ続く階段。進むとこの層には戻れません。<br>階段で体力は最大18、灯りは最大25、気力は上限まで回復します。</p><p>体力 ${state.hp} / 100　・　露の薬 ${state.potions}個<br>手元の結晶 ${state.gold}個を持ち帰ることもできます。</p><button class="primary" data-modal="descend">第${state.floor+1}層へ進む</button><button data-modal="return">ここで帰還する</button><button data-modal="stay">この層をもう少し探索</button>`,'stairs');}
-function result(){const won=state.phase==='won',dead=state.phase==='dead';open(`<span class="eyebrow">${won?'EXPEDITION COMPLETE':dead?'THE LIGHT FADES':'SAFE RETURN'}</span><h2 id="dialog-title">${won?'星を、持ち帰った。':dead?'灯りは、森の中へ。':'生きて帰る。それも冒険。'}</h2><p>${won?'あなたの灯りに、小さな星が宿った。星眠りの森の探索は、ここに完了です。':dead?'今回の戦利品は森に残されました。次の探索では、薬と帰路の灯を早めに使ってみよう。':'最深部には届かなくても、刻んだ地図と結晶は確かな収穫です。次は、もう一歩先へ。'}</p><div class="result"><div>持ち帰った結晶<strong>${dead?0:state.gold}</strong></div><div>到達した深さ<strong>第${state.floor}層</strong></div><div>歩いた距離<strong>${state.steps}歩</strong></div><div>退けた魔物<strong>${state.kills}体</strong></div></div><button class="primary" data-modal="retry">新しい森を探索する</button><button data-modal="title">タイトルに戻る</button>`,'result');}
+function result(){const won=state.phase==='won',dead=state.phase==='dead';open(`<span class="eyebrow">${won?'EXPEDITION COMPLETE':dead?'THE LIGHT FADES':'SAFE RETURN'}</span><h2 id="dialog-title">${won?'星を、持ち帰った。':dead?'灯りは、森の中へ。':'生きて帰る。それも冒険。'}</h2><p>${won?'あなたの灯りに、小さな星が宿った。星眠りの森の探索は、ここに完了です。':dead?'今回の戦利品は森に残されました。次の探索では、薬と帰路の灯を早めに使ってみよう。':returnDescription(state.floor)}</p><div class="result"><div>持ち帰った結晶<strong>${dead?0:state.gold}</strong></div><div>到達した深さ<strong>第${state.floor}層</strong></div><div>歩いた距離<strong>${state.steps}歩</strong></div><div>退けた魔物<strong>${state.kills}体</strong></div></div><button class="primary" data-modal="retry">新しい森を探索する</button><button data-modal="title">タイトルに戻る</button>`,'result');}
 $('start').onclick=()=>{if(saved&&!['dead','won','returned'].includes(saved.phase)){open('<h2 id="dialog-title">新しい探索を始める？</h2><p>保存されている探索を上書きします。</p><button class="primary" data-modal="new">新しく始める</button><button data-modal="close">やめる</button>','new');}else start();};
 $('continue').onclick=()=>start(true);
 $('sound').onclick=()=>{muted=!muted;updateSound();try{localStorage.setItem('suito-sound',muted?'off':'on');}catch{}sound();};updateSound();

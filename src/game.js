@@ -1,4 +1,4 @@
-import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-adventure';
+import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-kpt4';
 export const SIZE = 11;
 export const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
 export const FLOORS = ['木漏れ日の回廊','霧雨の根底','星眠りの庭'];
@@ -53,9 +53,9 @@ export function act(s,action){
  const id=`${s.floor}:${k}`;s.rewards??=[];
  if(s.rewards.some(item=>item.id===id)){log(s,'この宝箱は開封済みだ。');return true;}
  const tier=chestTier(s.seed,s.floor,x,y),gold=rewardGold(tier,roll(s,18));
- s.gold+=gold;s.potions++;const light=recover(s,'light',10,100);
- const reward={id,floor:s.floor,tier,gold,potions:1,light};s.rewards.push(reward);s.pendingReward=id;
- log(s,`${CHESTS[tier].name}：結晶${gold}個と露の薬。${recovery('灯り',light)}。`);
+ const {potions,lightMax}=CHESTS[tier];s.gold+=gold;s.potions+=potions;const light=recover(s,'light',lightMax,100);
+ const reward={id,floor:s.floor,tier,gold,potions,light,lightMax};s.rewards.push(reward);s.pendingReward=id;
+ log(s,`${CHESTS[tier].name}：結晶${gold}個と露の薬${potions}個。${recovery('灯り',light)}。`);
  }
  else if(e==='spring'){delete s.map.events[k];const hp=recover(s,'hp',30,100),focus=recover(s,'focus',6,6);log(s,`清らかな泉。${recovery('体力',hp)}。${recovery('気力',focus)}。`);}
  else if(e==='stairs'){s.phase='stairs';log(s,'根の階段を見つけた。この先は、さらに深い森。');}
