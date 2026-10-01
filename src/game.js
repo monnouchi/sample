@@ -28,7 +28,7 @@ export function generate(seed, floor=1, depth=10) {
 export function reveal(s){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=s.x+dx,y=s.y+dy;if(x>=0&&y>=0&&x<SIZE&&y<SIZE)s.map.seen[key(x,y)]=true;}s.map.visited[key(s.x,s.y)]=true;}
 export function fresh(seed=Math.floor(Math.random()*4294967296),{legacy=false,companion='ao'}={}){
  if(!legacy&&!Object.hasOwn(COMPANIONS,companion))throw new Error('同行者を選んでください');
- const s={version:legacy?1:2,...(legacy?{}:{companion,supportCharge:0,supportLog:'',rested:[]}),seed:seed>>>0,rng:seed>>>0,phase:'explore',floor:1,x:1,y:1,dir:1,hp:100,maxHp:100,focus:6,light:100,potions:3,gold:0,steps:0,kills:0,relic:false,lastMiss:false,lastAttack:null,rewards:[],pendingReward:null,map:generate(seed,1,legacy?3:10),enemy:null,log:['町の翠灯を灯し直すため、星の種が眠る地下庭へ。'],previous:[1,1]};
+ const s={version:legacy?1:2,...(legacy?{}:{companion,supportCharge:0,supportLog:'',rested:[]}),seed:seed>>>0,rng:seed>>>0,phase:'explore',floor:1,x:1,y:1,dir:1,hp:100,maxHp:100,focus:6,light:100,potions:3,gold:0,steps:0,kills:0,relic:false,lastMiss:false,lastAttack:null,ambientSeen:[],rewards:[],pendingReward:null,map:generate(seed,1,legacy?3:10),enemy:null,log:['町の翠灯を灯し直すため、星の種が眠る地下庭へ。'],previous:[1,1]};
  if(s.map.grid[1][2])s.dir=2;if(!legacy)s.log=[speak(s,COMPANIONS[companion].intro)];reveal(s);return s;
 }
 function roll(s,n){s.rng=(Math.imul(s.rng,1664525)+1013904223)>>>0;return s.rng%n;}
@@ -67,7 +67,7 @@ export function act(s,action){
  else if(e==='spring'){delete s.map.events[k];const hp=recover(s,'hp',30,100),focus=recover(s,'focus',6,6);log(s,`清らかな泉。${recovery('体力',hp)}。${recovery('気力',focus)}。`);}
  else if(e==='stairs'){s.phase='stairs';log(s,'根の階段を見つけた。この先は、さらに深い森。');}
  else if(e==='rest'||e==='rest-used')log(s,speak(s,e==='rest'?'休憩所に着いた。下の「休む」で補給できるよ。':'ここでの補給は使い切った。次へ進もう。'));
- else if(s.light>0)log(s,s.steps%4===0?speak(s,layersFor(s)[s.floor-1].detail):'地図に、新しい一歩を刻む。');
+ else if(s.light>0){s.ambientSeen??=[];const first=s.steps%4===0&&!s.ambientSeen.includes(s.floor);if(first)s.ambientSeen.push(s.floor);log(s,first?speak(s,layersFor(s)[s.floor-1].detail):'地図に、新しい一歩を刻む。');}
  return true;
  }
  return false;
@@ -113,6 +113,8 @@ export function restore(raw){
  if(!Array.isArray(s.log)||s.log.length>4||s.log.some(t=>typeof t!=='string'||t.length>200))return null;
  if(s.phase==='battle'&&(!s.enemy||typeof s.enemy.name!=='string'||s.enemy.name.length>40||!int(s.enemy.hp,1,100)||!int(s.enemy.maxHp,1,100)||s.enemy.hp>s.enemy.maxHp||!int(s.enemy.turn,0,100000)||typeof s.enemy.boss!=='boolean'))return null;
  if(s.version===2){if(!Object.hasOwn(COMPANIONS,s.companion))return null;s.rested=Array.isArray(s.rested)?[...new Set(s.rested.filter(f=>[4,8].includes(f)&&f<=s.floor))]:[];s.supportCharge=s.supportCharge===1?1:0;s.supportLog=typeof s.supportLog==='string'&&s.supportLog.length<70?s.supportLog:'';if(s.rested.includes(s.floor)&&s.map.events['1,1']==='rest')s.map.events['1,1']='rest-used';}
+ // Older saves have no delivery history: avoid replaying a possibly heard current-floor line.
+ s.ambientSeen=Array.isArray(s.ambientSeen)?[...new Set(s.ambientSeen.filter(f=>int(f,1,s.floor)))]:s.steps>=4?[s.floor]:[];
  if(s.strikeRng!==undefined&&!int(s.strikeRng,0,4294967295))return null;
  s.lastMiss=s.lastMiss===true;s.lastAttack=s.lastAttack&&['normal','miss','critical'].includes(s.lastAttack.kind)&&int(s.lastAttack.damage,0,50)?s.lastAttack:null;
  s.rewards=restoreRewards(s.rewards,maxFloor(s));s.pendingReward=typeof s.pendingReward==='string'&&s.rewards.some(r=>r.id===s.pendingReward)?s.pendingReward:null;

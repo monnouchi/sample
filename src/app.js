@@ -4,7 +4,7 @@ import {ForestAudio,actionCues} from './audio.js?v=20261001-ten';
 import {returnDescription,lightBand,lightAnnouncement} from './messages.js?v=20261001-ten';
 import {CHESTS} from './rewards.js?v=20261001-ten';
 import {protectControls} from './controls.js';
-import {fresh,act,restore,serialize,SAVE_KEY,floorName,DIRS,key} from './game.js?v=20261001-ten';
+import {fresh,act,restore,serialize,SAVE_KEY,floorName,DIRS,key} from './game.js?v=20261001-dialogue';
 import {drawScene,drawMap} from './render.js?v=20261001-ten';
 import {cameraAt,beginMotion} from './view.js';
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
