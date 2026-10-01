@@ -17,6 +17,10 @@ try:
   button=page.locator('[data-action=left]');button.scroll_into_view_if_needed();box=button.bounding_box();x=box['x']+box['width']/2;y=box['y']+box['height']/2
   cdp=page.context.new_cdp_session(page);old=state()['dir'];cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]});page.wait_for_timeout(650);cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});page.wait_for_timeout(250)
   assert state()['dir']==(old+3)%4;assert not page.evaluate('getSelection().toString()')
+  old=state()['dir'];button.scroll_into_view_if_needed();box=button.bounding_box();x=box['x']+box['width']/2;y=box['y']+box['height']/2
+  cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y}]})
+  for offset in [16,32,48,64]:cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':y-offset}]});page.wait_for_timeout(30)
+  cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});page.wait_for_timeout(250);assert state()['dir']==old
   old=state()['dir'];page.evaluate("""()=>{const b=document.querySelector('[data-action=left]');for(const [type,x] of [['pointerdown',20],['pointermove',65],['pointerup',65]])b.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:9,pointerType:'touch',clientX:x,clientY:10}));b.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,detail:1}));}""");assert state()['dir']==old
   # A cancelled touch does not swallow keyboard activation.
   button.focus();page.keyboard.press('Enter');page.wait_for_timeout(250);assert state()['dir']==(old+3)%4
@@ -24,5 +28,5 @@ try:
   assert page.locator('[data-action=forward] small').evaluate("e=>getComputedStyle(e).userSelect")=='none'
   assert page.locator('#message').evaluate("e=>getComputedStyle(e).userSelect")!='none'
   assert 'user-scalable=no' not in page.locator('meta[name=viewport]').get_attribute('content')
-  print('PASS: native tap, repeated taps, long press (one action/no selection), synthetic slide cancellation, keyboard, modal guard, selectable log and zoom metadata');b.close()
+  print('PASS: native tap, repeated taps, long press (one action/no selection), native swipe + synthetic slide cancellation, keyboard, modal guard, selectable log and zoom metadata');b.close()
 finally:server.shutdown();server.server_close()

@@ -1,3 +1,4 @@
+import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-adventure';
 export const SIZE = 11;
 export const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
 export const FLOORS = ['木漏れ日の回廊','霧雨の根底','星眠りの庭'];
@@ -21,7 +22,7 @@ export function generate(seed, floor=1) {
 }
 export function reveal(s){for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=s.x+dx,y=s.y+dy;if(x>=0&&y>=0&&x<SIZE&&y<SIZE)s.map.seen[key(x,y)]=true;}s.map.visited[key(s.x,s.y)]=true;}
 export function fresh(seed=Math.floor(Math.random()*4294967296)){
- const s={version:1,seed:seed>>>0,rng:seed>>>0,phase:'explore',floor:1,x:1,y:1,dir:1,hp:100,maxHp:100,focus:6,light:100,potions:3,gold:0,steps:0,kills:0,relic:false,map:generate(seed,1),enemy:null,log:['小さな灯りを携え、森へ足を踏み入れた。'],previous:[1,1]};
+ const s={version:1,seed:seed>>>0,rng:seed>>>0,phase:'explore',floor:1,x:1,y:1,dir:1,hp:100,maxHp:100,focus:6,light:100,potions:3,gold:0,steps:0,kills:0,relic:false,rewards:[],pendingReward:null,map:generate(seed,1),enemy:null,log:['小さな灯りを携え、森へ足を踏み入れた。'],previous:[1,1]};
  if(s.map.grid[1][2])s.dir=2;reveal(s);return s;
 }
 function roll(s,n){s.rng=(Math.imul(s.rng,1664525)+1013904223)>>>0;return s.rng%n;}
@@ -47,7 +48,15 @@ export function act(s,action){
  const k=key(x,y),e=s.map.events[k];
  if(e==='enemy')encounter(s);
  else if(e==='shrine')encounter(s,true);
- else if(e==='chest'){delete s.map.events[k];const gold=18+roll(s,18);s.gold+=gold;s.potions++;const light=recover(s,'light',10,100);log(s,`古い箱に結晶${gold}個と露の薬。${recovery('灯り',light)}。`);}
+ else if(e==='chest'){
+ delete s.map.events[k];
+ const id=`${s.floor}:${k}`;s.rewards??=[];
+ if(s.rewards.some(item=>item.id===id)){log(s,'この宝箱は開封済みだ。');return true;}
+ const tier=chestTier(s.seed,s.floor,x,y),gold=rewardGold(tier,roll(s,18));
+ s.gold+=gold;s.potions++;const light=recover(s,'light',10,100);
+ const reward={id,floor:s.floor,tier,gold,potions:1,light};s.rewards.push(reward);s.pendingReward=id;
+ log(s,`${CHESTS[tier].name}：結晶${gold}個と露の薬。${recovery('灯り',light)}。`);
+ }
  else if(e==='spring'){delete s.map.events[k];const hp=recover(s,'hp',30,100),focus=recover(s,'focus',6,6);log(s,`清らかな泉。${recovery('体力',hp)}。${recovery('気力',focus)}。`);}
  else if(e==='stairs'){s.phase='stairs';log(s,'根の階段を見つけた。この先は、さらに深い森。');}
  else if(s.light>0)log(s,s.steps%4===0?'葉擦れの向こうに、何かの気配がする。':'地図に、新しい一歩を刻む。');
@@ -81,6 +90,7 @@ export function restore(raw){
  if(!Array.isArray(s.previous)||s.previous.length!==2||!s.previous.every(v=>int(v,0,10))||s.map.grid[s.previous[1]][s.previous[0]]!==0)return null;
  if(!Array.isArray(s.log)||s.log.length>4||s.log.some(t=>typeof t!=='string'||t.length>200))return null;
  if(s.phase==='battle'&&(!s.enemy||typeof s.enemy.name!=='string'||s.enemy.name.length>40||!int(s.enemy.hp,1,100)||!int(s.enemy.maxHp,1,100)||s.enemy.hp>s.enemy.maxHp||!int(s.enemy.turn,0,100000)||typeof s.enemy.boss!=='boolean'))return null;
+ s.rewards=restoreRewards(s.rewards);s.pendingReward=typeof s.pendingReward==='string'&&s.rewards.some(r=>r.id===s.pendingReward)?s.pendingReward:null;
  s.log=s.log.map(t=>t.replaceAll('帰還の糸','帰路の灯'));
  return s;
  }catch{return null;}

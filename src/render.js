@@ -1,4 +1,5 @@
-import {DIRS,key,random} from './game.js?v=20260930-round2';
+import {chestTier,CHESTS} from './rewards.js?v=20261001-adventure';
+import {DIRS,key,random} from './game.js?v=20261001-adventure';
 import {illumination} from './view.js';
 const W=840,H=640;
 function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
@@ -8,13 +9,22 @@ const t=texture.getContext('2d'),r=random(91);t.fillStyle='#233d2b';t.fillRect(0
 for(let i=0;i<1000;i++){const x=r()*128,y=r()*256;ellipse(t,x,y,2+r()*12,2+r()*7,`rgba(${35+r()*40},${65+r()*45},${35+r()*30},.6)`);}
 for(let j=0;j<4;j++){const x=j*38-8;t.fillStyle='#233128';t.fillRect(x,0,12,256);t.strokeStyle='#57704a';t.lineWidth=2;t.beginPath();t.moveTo(x+7,256);t.bezierCurveTo(x-5,180,x+20,70,x+10,0);t.stroke();}
 for(let i=0;i<80;i++){ellipse(t,r()*128,r()*256,2+r()*4,1+r()*3,'#60805066');}
+const textures=[texture];
+for(let floor=2;floor<=3;floor++){
+ const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;const c=canvas.getContext('2d');c.drawImage(texture,0,0);
+ c.fillStyle=floor===2?'#123e5080':'#52575f60';c.fillRect(0,0,128,256);
+ c.strokeStyle=floor===2?'#4a605c':'#809388';c.lineWidth=floor===2?15:6;
+ for(let i=0;i<5;i++){c.beginPath();c.moveTo(i*35-30,256);c.bezierCurveTo(i*25+40,190,i*30-20,90,i*25+10,0);c.stroke();}
+ textures.push(canvas);
+}
+const PALETTES=[{sky:'#739977',floor:['#a7b292','#61795d','#273f32']},{sky:'#647f8c',floor:['#809b9e','#3d6267','#1c3c44']},{sky:'#8297b6',floor:['#a7b5bb','#596d7b','#293b4f']}];
 export function drawScene(canvas,s,time=0,camera=null){
- const c=canvas.getContext('2d');c.clearRect(0,0,W,H);
- const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0a292c');sky.addColorStop(.4,s?.floor===3?'#42626a':'#739977');sky.addColorStop(.52,'#b4c498');sky.addColorStop(1,'#123730');c.fillStyle=sky;c.fillRect(0,0,W,H);
+ const c=canvas.getContext('2d');c.clearRect(0,0,W,H);const floorIndex=(s?.floor||1)-1,palette=PALETTES[floorIndex];
+ const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0a292c');sky.addColorStop(.4,palette.sky);sky.addColorStop(.52,'#b4c498');sky.addColorStop(1,'#123730');c.fillStyle=sky;c.fillRect(0,0,W,H);
  const rr=random(783);for(let i=0;i<70;i++){const x=rr()*W,y=rr()*220;c.fillStyle='#143d3270';c.fillRect(x,y,3+rr()*10,380-y);ellipse(c,x,y,20+rr()*100,15+rr()*40,`rgba(15,49,39,${.2+rr()*.3})`);}
  // Soft shafts of light through the canopy.
  for(let i=0;i<5;i++){const x=230+i*77;const g=c.createLinearGradient(x,0,x-100,H);g.addColorStop(0,'#e2efb11a');g.addColorStop(1,'#c9eac000');path(c,[[x,0],[x+22,0],[x-60,H],[x-175,H]],g);}
- const floor=c.createLinearGradient(0,315,0,H);floor.addColorStop(0,'#a7b292');floor.addColorStop(.25,'#61795d');floor.addColorStop(1,'#273f32');path(c,[[0,330],[W,330],[W,H],[0,H]],floor);
+ const floor=c.createLinearGradient(0,315,0,H);floor.addColorStop(0,palette.floor[0]);floor.addColorStop(.25,palette.floor[1]);floor.addColorStop(1,palette.floor[2]);path(c,[[0,330],[W,330],[W,H],[0,H]],floor);
  // Receding stones and low ferns give depth to the forest floor.
  const fr=random(43);for(let i=0;i<220;i++){const y=335+fr()*310,p=(y-320)/320,x=fr()*W;ellipse(c,x,y,1+p*12,1+p*4,fr()>.5?'#b2b78728':'#102c2d66');}
  if(s){
@@ -23,20 +33,25 @@ export function drawScene(canvas,s,time=0,camera=null){
  while(dist<14){hx=px+.5+rx*dist;hy=py+.5+ry*dist;if(s.map.grid[Math.floor(hy)]?.[Math.floor(hx)]!==0)break;dist+=.035;}
  const depth=dist*Math.cos(offset),height=Math.min(1200,420/depth),top=320-height*.6;
  const fx=hx-Math.floor(hx),fy=hy-Math.floor(hy),edge=Math.min(fx,1-fx)<Math.min(fy,1-fy)?fy:fx;
- c.drawImage(texture,Math.floor(edge*127),0,1,256,sx,top,3,height);
+ c.drawImage(textures[floorIndex],Math.floor(edge*127),0,1,256,sx,top,3,height);
  c.fillStyle=`rgba(7,29,30,${Math.min(.93,depth/light.reach*.65)})`;c.fillRect(sx,top,3,height);
  c.fillStyle=`rgba(159,186,155,${Math.min(.3,depth*.025)*(s.light/100)})`;c.fillRect(sx,top,3,height);z.push(depth);
  }
  // Draw an event ahead only when it is in the forward line of sight.
  for(let d=camera?.moving?-1:5;d>=0;d--){const x=s.x+dx*d,y=s.y+dy*d;let clear=true;for(let n=1;n<=d;n++)if(s.map.grid[s.y+dy*n]?.[s.x+dx*n]!==0)clear=false;if(!clear)continue;const e=s.map.events[key(x,y)];if(!e||e==='enemy')continue;
  const scale=1/(d+.8),cx=420,cy=340+105*scale;c.save();c.translate(cx,cy);c.scale(scale,scale);
- if(e==='chest'){c.shadowColor='#e3cb78';c.shadowBlur=16;c.fillStyle='#745735';c.fillRect(-44,-45,88,48);c.shadowBlur=0;c.strokeStyle='#d8c080';c.lineWidth=4;c.strokeRect(-44,-45,88,48);c.beginPath();c.moveTo(-44,-25);c.lineTo(44,-25);c.stroke();c.fillStyle='#e4d39b';c.fillRect(-6,-32,12,15);}
+ if(e==='chest'){const tier=chestTier(s.seed,s.floor,x,y),chest=CHESTS[tier];c.shadowColor=chest.color;c.shadowBlur=16;c.fillStyle='#745735';c.fillRect(-44,-45,88,48);c.shadowBlur=0;c.strokeStyle=chest.color;c.lineWidth=tier==='gold'?7:4;c.strokeRect(-44,-45,88,48);c.beginPath();c.moveTo(-44,-25);c.lineTo(44,-25);c.stroke();c.fillStyle='#e4d39b';c.fillRect(-6,-32,12,15);if(tier!=='common'){c.strokeRect(-34,-37,68,31);c.fillStyle=chest.color;c.font='22px serif';c.textAlign='center';c.fillText(tier==='gold'?'★':'Ⅱ',0,-53);}}
  if(e==='stairs'){for(let i=0;i<5;i++){c.fillStyle=i%2?'#8d9d75':'#576f56';c.fillRect(-55-i*10,-65+i*15,110+i*20,12);}c.fillStyle='#e2dfa8';c.font='26px serif';c.textAlign='center';c.fillText('◇',0,-88);}
  if(e==='shrine'){c.strokeStyle='#f3d393';c.lineWidth=7;c.shadowColor='#f8d680';c.shadowBlur=24;path(c,[[0,-140],[48,-75],[0,-10],[-48,-75]],'#648079');c.strokeRect(-62,-155,124,160);c.shadowBlur=0;}
  if(e==='spring'){ellipse(c,0,0,65,16,'#72c9bd80');ellipse(c,0,-4,42,9,'#b3e4d677');c.shadowColor='#8bdddc';c.shadowBlur=24;ellipse(c,0,-25,6,9,'#c4f2e3');}
  c.restore();
  }
  }
+ // Floor-specific dressing uses a local fixed seed, never the game RNG.
+ const dressing=random(918+floorIndex);
+ if(floorIndex===0){for(let i=0;i<35;i++){const x=dressing()*W,y=380+dressing()*250;path(c,[[x,y],[x+9,y-3],[x+17,y+4],[x+5,y+7]],i%2?'#a19c5944':'#d1b47955');}}
+ if(floorIndex===1){for(const x of [35,805]){ellipse(c,x,595,110,20,'#7aa8b455');ellipse(c,x,595,78,8,'#c4dbe233');}for(let i=0;i<7;i++)ellipse(c,80+i*115,300+i%3*35,130,22,'#adceda0b');}
+ if(floorIndex===2){for(let i=0;i<32;i++){const x=dressing()*W,y=400+dressing()*220;ellipse(c,x,y,3+dressing()*3,2,'#e1e7e6b0');}for(let i=0;i<9;i++){const x=dressing()*W,y=40+dressing()*210;path(c,[[x,y-4],[x+2,y],[x,y+4],[x-2,y]],'#e5e5c980');}}
  // Foreground fronds frame the playable scene.
  const pr=random(31);for(let side=0;side<2;side++){c.save();if(side){c.translate(W,0);c.scale(-1,1);}for(let i=0;i<22;i++){const x=pr()*120,y=430+pr()*230;c.strokeStyle=i%2?'#295846':'#3c6546';c.lineWidth=2;c.beginPath();c.moveTo(x,y+50);c.quadraticCurveTo(x+10,y,x+60,y-35);c.stroke();for(let j=0;j<5;j++){const px=x+j*10,py=y+20-j*9;path(c,[[px,py],[px-25,py-20],[px+10,py-5]],'#356347');path(c,[[px,py],[px+30,py-4],[px+13,py+8]],'#244d39');}}c.restore();}
  if(s){c.fillStyle=`rgba(3,12,24,${illumination(s.light).shade})`;c.fillRect(0,0,W,H);}
@@ -46,16 +61,31 @@ export function drawScene(canvas,s,time=0,camera=null){
 }
 function drawCreature(c,e,time){
  if(e.boss){drawGuardian(c,time);return;}
- c.save();c.translate(420,390+Math.sin(time/700)*3);const boss=e.boss;const scale=boss?1.1:.85;c.scale(scale,scale);
- ellipse(c,0,130,108,20,'#061c24aa');c.shadowColor=boss?'#adc9dc':'#a2d795';c.shadowBlur=20;
- // Original forest spirit: a seed-like masked body suspended among roots.
- for(let side of [-1,1]){c.save();c.scale(side,1);c.strokeStyle=boss?'#788b86':'#697c50';c.lineWidth=10;c.lineCap='round';c.beginPath();c.moveTo(28,-75);c.bezierCurveTo(85,-140,50,-170,97,-206);c.stroke();c.lineWidth=5;for(let j=0;j<3;j++){c.beginPath();c.moveTo(50+j*9,-108-j*26);c.lineTo(100+j*11,-132-j*26);c.lineTo(112+j*8,-157-j*24);c.stroke();}for(let j=0;j<3;j++){c.lineWidth=8-j;c.beginPath();c.moveTo(35,35);c.bezierCurveTo(130-j*20,65,30+j*30,95,80+j*27,120+j*6);c.stroke();}c.restore();}
- c.shadowBlur=0;const body=c.createLinearGradient(-70,-100,60,100);body.addColorStop(0,'#719466');body.addColorStop(.4,boss?'#385257':'#324f38');body.addColorStop(1,'#112e30');path(c,[[0,-125],[55,-75],[69,9],[31,88],[0,112],[-42,75],[-64,-12],[-43,-92]],body);
- c.strokeStyle='#94b17b';c.lineWidth=2;c.beginPath();c.moveTo(0,-100);c.lineTo(-15,0);c.lineTo(0,90);c.moveTo(0,-23);c.lineTo(42,14);c.moveTo(-12,10);c.lineTo(-43,36);c.stroke();
- path(c,[[-46,-66],[0,-95],[43,-64],[28,-12],[0,15],[-33,-15]],'#cfcea1');path(c,[[-46,-66],[0,-95],[-8,-31],[0,15],[-33,-15]],'#91a687');
- c.shadowColor='#fff4bb';c.shadowBlur=16;ellipse(c,-20,-46,7,4,'#f0e7a2');ellipse(c,20,-46,7,4,'#f0e7a2');c.shadowBlur=0;
- for(let i=0;i<14;i++){const a=i*2.4,x=Math.cos(a)*55,y=Math.sin(a)*65+40;path(c,[[x,y],[x+22,y-17],[x+13,y+7]],i%2?'#668858':'#96ac70');}
- if(boss){c.strokeStyle='#dfd69b';c.lineWidth=2;c.beginPath();c.arc(0,-40,110,0,Math.PI*2);c.stroke();for(let i=0;i<7;i++){const a=i*Math.PI*2/7;c.fillStyle='#ece3ad';c.fillRect(Math.cos(a)*110-3,Math.sin(a)*110-43,6,6);}}
+ c.save();c.translate(420,385+Math.sin(time/900)*2);ellipse(c,0,135,135,17,'#061c24aa');
+ if(e.name==='苔角の獣'){
+  // A low, broad quadruped with paired moss-covered antlers.
+  for(const x of [-100,-52,52,100])path(c,[[x-12,22],[x+12,22],[x+18,124],[x-19,124]],'#4d6247');
+  ellipse(c,0,15,135,60,'#657b50');ellipse(c,0,-19,67,63,'#88925f');
+  path(c,[[-54,-48],[-80,-87],[-18,-67]],'#b1b078');path(c,[[54,-48],[80,-87],[18,-67]],'#b1b078');
+  c.strokeStyle='#afbd86';c.lineWidth=9;c.lineCap='round';
+  for(const side of [-1,1]){c.beginPath();c.moveTo(side*30,-63);c.lineTo(side*55,-120);c.lineTo(side*89,-151);c.moveTo(side*52,-111);c.lineTo(side*25,-150);c.moveTo(side*67,-132);c.lineTo(side*104,-121);c.stroke();ellipse(c,side*55,-116,18,10,'#91b45f');}
+  ellipse(c,0,11,48,30,'#b6b288');ellipse(c,0,10,17,11,'#293d31');
+  for(const x of [-28,28])ellipse(c,x,-27,7,4,'#f8e9ae');
+  for(let i=0;i<8;i++)ellipse(c,-112+i*31,-16+Math.sin(i)*12,20,12,'#97a45d');
+ }else if(e.name==='宵羽の蛾'){
+  // Wing spread and long antennae remain recognizable without color.
+  for(const side of [-1,1]){c.save();c.scale(side,1);path(c,[[8,-26],[157,-142],[192,-68],[150,21],[174,83],[96,117],[15,57]],'#899cb1');path(c,[[17,-18],[143,-108],[158,-69],[127,7],[27,40]],'#465c81');ellipse(c,113,-47,28,37,'#d5ca9e');ellipse(c,113,-47,13,19,'#304360');path(c,[[24,47],[140,35],[123,93],[57,72]],'#b5adb0');c.restore();}
+  ellipse(c,0,15,18,95,'#d2c5a1');ellipse(c,0,-66,22,24,'#e0d6ac');c.strokeStyle='#dedba9';c.lineWidth=4;
+  for(const side of [-1,1]){c.beginPath();c.moveTo(side*9,-79);c.quadraticCurveTo(side*30,-155,side*60,-150);c.stroke();ellipse(c,side*60,-150,5,5,'#e7dfb4');}
+ }else{
+  // Narrow crooked trunk, unequal arms and long root legs.
+  path(c,[[-24,-173],[31,-144],[20,-38],[57,67],[10,102],[-50,55],[-32,-67]],'#8c8870');
+  c.strokeStyle='#baad82';c.lineWidth=18;c.lineCap='round';c.beginPath();c.moveTo(-27,-79);c.lineTo(-100,-22);c.lineTo(-125,83);c.moveTo(22,-59);c.lineTo(75,-104);c.lineTo(122,-71);c.stroke();
+  c.lineWidth=8;for(let i=0;i<4;i++){c.beginPath();c.moveTo(-20+i*15,52);c.bezierCurveTo(-60+i*34,90,-80+i*47,110,-95+i*61,142-i*5);c.stroke();}
+  c.strokeStyle='#4c6951';c.lineWidth=6;c.beginPath();c.moveTo(-17,-143);c.lineTo(-7,-80);c.lineTo(0,25);c.stroke();
+  ellipse(c,-7,-98,6,8,'#f0e0a0');ellipse(c,16,-89,6,8,'#f0e0a0');
+  path(c,[[14,-136],[52,-188],[72,-158],[41,-121]],'#a4b28a');
+ }
  c.restore();
 }
 function drawGuardian(c,time){

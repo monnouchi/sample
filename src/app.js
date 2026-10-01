@@ -1,22 +1,26 @@
+import {CHESTS} from './rewards.js?v=20261001-adventure';
 import {protectControls} from './controls.js';
-import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js?v=20260930-round2';
-import {drawScene,drawMap} from './render.js';
+import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js?v=20261001-adventure';
+import {drawScene,drawMap} from './render.js?v=20261001-adventure';
 import {cameraAt,beginMotion} from './view.js';
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
 protectControls();
 const titleState=fresh(188);
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-let motion=null,relicNoticeShown=false;
+let motion=null,relicNoticeShown=false,rewardTimers=[];
+function stopRewardTimers(){rewardTimers.forEach(clearTimeout);rewardTimers=[];}
+function revealReward(){stopRewardTimers();document.querySelector('.reward-display')?.classList.add('revealed');const skip=$('reward-skip');if(skip)skip.hidden=true;}
+
 function drawView(time=performance.now()){const camera=cameraAt(motion,time);if(motion&&!camera)motion=null;scene.dataset.moving=String(Boolean(camera));drawScene(scene,state||titleState,reducedMotion.matches?0:time,camera);}
 reducedMotion.addEventListener('change',()=>{motion=null;drawView();});
 let state=null,saved=null,muted=true,audio=null,storageOK=true,modalType='',lastAction=0;
 try{saved=restore(localStorage.getItem(SAVE_KEY));muted=localStorage.getItem('suito-sound')!=='on';}catch{storageOK=false;}
 if(saved&&!['dead','won','returned'].includes(saved.phase))$('continue').hidden=false;
-function sound(kind='step'){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.connect(gain);gain.connect(audio.destination);osc.type=kind==='hit'?'triangle':'sine';osc.frequency.setValueAtTime(kind==='hit'?130:kind==='turn'?330:440,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(kind==='hit'?55:220,audio.currentTime+.13);gain.gain.setValueAtTime(.035,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.16);osc.start();osc.stop(audio.currentTime+.17);}catch{muted=true;updateSound();}}
+function sound(kind='step'){if(muted)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const osc=audio.createOscillator(),gain=audio.createGain();osc.connect(gain);gain.connect(audio.destination);osc.type=kind==='hit'?'triangle':'sine';osc.frequency.setValueAtTime(kind==='hit'?130:kind==='turn'?330:kind==='reward'?660:440,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(kind==='hit'?55:220,audio.currentTime+.13);gain.gain.setValueAtTime(.035,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.16);osc.start();osc.stop(audio.currentTime+.17);}catch{muted=true;updateSound();}}
 function updateSound(){$('sound').textContent=muted?'音 OFF':'音 ON';$('sound').setAttribute('aria-pressed',String(!muted));$('sound').setAttribute('aria-label',muted?'効果音をオンにする':'効果音をオフにする');}
 function save(){try{localStorage.setItem(SAVE_KEY,serialize(state));storageOK=true;}catch{storageOK=false;}$('save-status').textContent=storageOK?'自動保存済み':'保存不可 · この画面で継続';}
-function open(content,type){if(dialog.open)dialog.close();modalType=type;$('dialog-content').innerHTML=content;dialog.showModal();}
-function close(){dialog.close();modalType='';}
+function open(content,type){stopRewardTimers();if(dialog.open)dialog.close();modalType=type;$('dialog-content').innerHTML=content;dialog.showModal();}
+function close(){stopRewardTimers();dialog.close();modalType='';}
 function start(resume=false){close();motion=null;relicNoticeShown=false;state=resume&&saved?saved:fresh();$('intro').hidden=true;$('play').hidden=false;$('start-note').hidden=true;$('map-button').hidden=false;save();render();}
 function render(){
  if(!state){drawView();$('map-button').hidden=true;return;}
@@ -24,15 +28,33 @@ function render(){
  $('scene-tag').textContent=s.relic?'THE SEED IS YOURS':s.phase==='battle'?'STAND YOUR GROUND':'FOLLOW THE LITTLE LIGHT';
  $('hp-label').innerHTML=`${s.hp} <small>/ 100</small>`;$('hp-meter').style.width=`${s.hp}%`;$('hp-meter').style.background=s.hp<30?'#df9474':'#adc99e';$('light-label').textContent=s.light;$('light-meter').style.width=`${s.light}%`;$('focus-label').textContent='◆'.repeat(s.focus)+'◇'.repeat(6-s.focus);$('potions').textContent=s.potions;$('message').textContent=s.log[0];$('treasure').textContent=`結晶 ${s.gold} · ${s.steps}歩`;$('objective').textContent=s.relic?'星の種を入手済み！ 帰路の灯で帰還しよう':s.floor===3?'最深部：ボス「星樹の守り手」を倒そう':'目標：第3層のボスを倒し、星の種を持ち帰る';
  $('mission').classList.toggle('complete',s.relic);$('mission-return').hidden=!s.relic;$('mission-return').disabled=s.phase==='battle';
+ updateLightWarning(s);$('reward-history').textContent=`宝箱の履歴 ${s.rewards?.length||0}/9`;
  const battle=s.phase==='battle';$('explore-controls').hidden=battle;$('battle-controls').hidden=!battle;$('enemy-hud').hidden=!battle;$('potion').disabled=!s.potions||s.hp===100;
  $('enemy-hud').classList.toggle('boss',Boolean(s.enemy?.boss));
  if(battle){$('encounter-label').textContent=s.enemy.boss?'最深部のボス · 退避不可':'魔物との遭遇';$('enemy-name').textContent=s.enemy.name;$('enemy-hp').style.width=`${s.enemy.hp/s.enemy.maxHp*100}%`;$('battle-enemy').textContent=(s.enemy.boss?'最深部のボス：':'')+s.enemy.name;$('intent').textContent=s.enemy.turn%3===2?'次は強撃。身を守ると被害を軽減':'次は通常攻撃。こちらの行動後に反撃';$('battle-enemy').parentElement.classList.toggle('heavy',s.enemy.turn%3===2);document.querySelector('[data-action="skill"]').disabled=s.focus<3;$('battle-potion').disabled=!s.potions||s.hp===100;$('battle-potion-count').textContent=`×${s.potions}`;$('battle-potion').setAttribute('aria-label',`露の薬、残り${s.potions}個、体力最大42回復`);$('flee').disabled=s.enemy.boss;}
  const total=s.map.grid.flat().filter(v=>!v).length;$('map-percent').textContent=`${Math.round(Object.keys(s.map.visited).length/total*100)}%`;
  drawView();drawMap($('map'),s);
+ if(s.pendingReward&&s.phase==='explore'&&!dialog.open)showReward(s.rewards.find(r=>r.id===s.pendingReward));
  if(s.relic&&s.phase==='explore'&&!relicNoticeShown&&!dialog.open){relicNoticeShown=true;open('<span class="eyebrow">守り手を撃破</span><h2 id="dialog-title">星の種を手に入れた！</h2><p>最深部のボスを倒しました。あと一歩で探索完了です。<br><strong>「帰路の灯」で森の外へ持ち帰ろう。</strong></p><button class="primary" data-modal="return">帰路の灯で帰還・クリア</button><button data-modal="close">もう少し探索する</button>','relic');}
  if(s.phase==='stairs'&&!dialog.open)stairs();
  if(['won','dead','returned'].includes(s.phase)&&modalType!=='result')result();
 }
+function updateLightWarning(s){
+ const warning=$('light-warning');warning.hidden=s.light>10;
+ if(warning.hidden)return;
+ const detail=s.light===0?'灯りが尽きた。移動するたび体力を4失います。':s.light===1?'灯りは残り1。次の一歩で0になり、体力を4失います。':`灯りは残り${s.light}。0になる一歩から、移動ごとに体力を4失います。`;
+ warning.textContent=`⚠ ${detail} 旋回は消費なし。${s.phase==='battle'?'戦闘中は灯りを消費しません。':'帰路の灯で帰還することもできます。'}`;
+}
+function rewardItems(r){return `<ul class="reward-items"><li><span aria-hidden="true">◆</span><div><strong>結晶 ×${r.gold}</strong><small>持ち帰ると今回の探索スコアになります。お店での用途はありません。</small></div></li><li><span aria-hidden="true">⚗</span><div><strong>露の薬 ×${r.potions}</strong><small>所持数に追加。使うと体力を最大42回復。</small></div></li><li><span aria-hidden="true">☼</span><div><strong>灯り +${r.light}</strong><small>${r.light?`その場で実際に${r.light}回復しました。`:'すでに満タンのため回復なし。'}（最大10）</small></div></li></ul>`;}
+function showReward(r){
+ if(!r)return;
+ const chest=CHESTS[r.tier];
+ open(`<div class="reward-display ${r.tier}"><span class="eyebrow">第${r.floor}層 · 宝箱の報酬</span><div class="chest-emblem" aria-hidden="true">▣ ${chest.mark}</div><h2 id="dialog-title">${chest.name}</h2><p class="reward-saved">${storageOK?'報酬は取得・保存済みです。':'報酬は取得済みです。このブラウザでは保存できません。'}</p>${rewardItems(r)}</div><button id="reward-skip" data-modal="reward-skip">演出をスキップ</button><button class="primary" data-modal="reward-close">閉じて探索へ</button>`,'reward');
+ if(reducedMotion.matches)revealReward();
+ else{rewardTimers.push(setTimeout(()=>{if(modalType==='reward'){sound('reward');document.querySelector('.reward-display')?.classList.add('opening');}},220));rewardTimers.push(setTimeout(revealReward,1400));}
+}
+function acknowledgeReward(){if(state?.pendingReward){state.pendingReward=null;save();}}
+$('reward-history').onclick=()=>{const records=state?.rewards||[];open(`<span class="eyebrow">今回の冒険</span><h2 id="dialog-title">宝箱の履歴</h2>${records.length?records.map(r=>`<section class="reward-record"><h3>第${r.floor}層 · ${CHESTS[r.tier].mark} ${CHESTS[r.tier].name}</h3>${rewardItems(r)}</section>`).join(''):'<p>記録はまだありません。旧セーブで開けた箱は記録されていません。</p>'}<button class="primary" data-modal="close">探索に戻る</button>`,'history');};
 function dispatch(action){
  if(!state||dialog.open)return;
  const now=performance.now();if(motion&&cameraAt(motion,now))return;
@@ -57,8 +79,8 @@ $('return').onclick=()=>open('<span class="eyebrow">THE LIGHT HOME</span><h2 id=
 $('mission-return').onclick=()=>$('return').click();
 $('potion').onclick=()=>dispatch('potion');
 for(const b of document.querySelectorAll('[data-action]'))b.onclick=()=>dispatch(b.dataset.action);
-$('dialog-content').onclick=e=>{const a=e.target.closest('[data-modal]')?.dataset.modal;if(!a)return;const old=modalType;close();if(a==='retry'||a==='new'){start();return;}if(a==='title'){motion=null;saved=state;state=null;$('intro').hidden=false;$('play').hidden=true;$('continue').hidden=true;$('start-note').hidden=false;$('enemy-hud').hidden=true;$('floor-label').textContent='星眠りの森';render();return;}if(a==='close'){if(old==='help'&&state?.phase==='stairs')stairs();return;}act(state,a);save();render();};
-dialog.addEventListener('cancel',e=>{if(['result','stairs'].includes(modalType)){e.preventDefault();return;}modalType='';});
+$('dialog-content').onclick=e=>{const a=e.target.closest('[data-modal]')?.dataset.modal;if(!a)return;const old=modalType;if(a==='reward-skip'){revealReward();return;}if(old==='reward')acknowledgeReward();close();if(a==='retry'||a==='new'){start();return;}if(a==='title'){motion=null;saved=state;state=null;$('intro').hidden=false;$('play').hidden=true;$('continue').hidden=true;$('start-note').hidden=false;$('enemy-hud').hidden=true;$('floor-label').textContent='星眠りの森';render();return;}if(a==='close'||a==='reward-close'){if(old==='help'&&state?.phase==='stairs')stairs();return;}act(state,a);save();render();};
+dialog.addEventListener('cancel',e=>{if(['result','stairs'].includes(modalType)){e.preventDefault();return;}if(modalType==='reward')acknowledgeReward();stopRewardTimers();modalType='';});
 window.addEventListener('keydown',e=>{if(dialog.open||!state||e.repeat)return;const a={ArrowUp:'forward',w:'forward',ArrowDown:'back',s:'back',ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right','1':'attack','2':'skill','3':'guard'}[e.key];if(a){e.preventDefault();dispatch(a);}});
 document.addEventListener('visibilitychange',()=>{motion=null;if(state)save();});
 let frame=0;function animate(time){if(!document.hidden && time-frame>(motion?15:80)){drawView(time);frame=time;}requestAnimationFrame(animate);}render();requestAnimationFrame(animate);

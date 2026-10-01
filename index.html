@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a2022"><meta name="description" content="灯りを頼りに森を歩き、地図を描く。短い探索を楽しむオリジナル・ダンジョンRPG。">
-<title>翠灯の迷宮 — 星眠りの森</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css?v=20261001-controls">
+<title>翠灯の迷宮 — 星眠りの森</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css?v=20261001-adventure">
 </head>
 <body>
 <main id="app">
@@ -18,15 +18,17 @@
  </section>
  <section id="play" hidden>
   <div id="mission" class="mission"><strong id="objective">目標：最深部の「星の種」</strong><button id="mission-return" hidden>帰路の灯でクリア</button></div>
+  <p id="light-warning" class="light-warning" role="status" hidden></p>
   <div class="vitals"><div class="vital hp"><div><span>体力</span><strong id="hp-label">100 <small>/ 100</small></strong></div><div class="meter"><i id="hp-meter"></i></div></div><div class="vital"><div><span>灯り</span><strong id="light-label">100</strong></div><div class="meter amber"><i id="light-meter"></i></div></div><div class="focus"><span>気力</span><strong id="focus-label">◆◆◆◆◆◆</strong></div></div>
   <div class="journal" aria-live="polite" aria-atomic="true"><span class="journal-mark">✧</span><p id="message"></p></div>
   <div id="explore-controls"><div class="tools"><button id="potion">露の薬 <strong id="potions">3</strong><small>体力 最大42回復</small></button><div class="movement"><button data-action="left" aria-label="左を向く">↶<small>左向き</small></button><button data-action="forward" class="forward" aria-label="一歩進む">△<small>進む</small></button><button data-action="right" aria-label="右を向く">↷<small>右向き</small></button><button data-action="back" class="back" aria-label="一歩下がる">▽ <small>一歩下がる</small></button></div><button id="return">帰路の灯<small>戦利品を持ち帰る</small></button></div></div>
   <div id="battle-controls" hidden><div class="battle-context" role="status" aria-live="polite" aria-atomic="true"><strong id="battle-enemy"></strong><p id="intent"></p></div><button data-action="attack" class="primary"><span class="action-icon" aria-hidden="true">⚔</span>短剣で攻撃<small>気力消費なし</small></button><button data-action="skill"><span class="action-icon" aria-hidden="true">✦</span>翠の一閃<small>気力 3 · 強い一撃</small></button><button data-action="guard"><span class="action-icon" aria-hidden="true">🛡</span>身を守る<small>軽減 ＋ 気力 最大2回復</small></button><button data-action="potion" id="battle-potion"><span class="action-icon" aria-hidden="true">⚗</span><span id="battle-potion-label">露の薬</span> <span id="battle-potion-count">×3</span><small>体力 最大42回復</small></button><button data-action="flee" id="flee"><span class="action-icon" aria-hidden="true">↩</span>退く<small>体力を消費して退避</small></button></div>
+  <button id="reward-history" class="history-button">宝箱の履歴 0/9</button>
   <footer><span id="treasure">結晶 0</span><span id="save-status">自動保存</span></footer>
  </section>
  <p id="start-note" class="start-note">地図は歩いたぶんだけ。帰還の判断も、冒険のうち。</p>
  <noscript>このゲームを遊ぶにはJavaScriptを有効にしてください。</noscript>
 </main>
 <dialog id="dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
-<script type="module" src="./src/app.js?v=20261001-controls"></script>
+<script type="module" src="./src/app.js?v=20261001-adventure"></script>
 </body></html>
