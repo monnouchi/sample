@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generate,fresh,act,restore,serialize,DIRS,key} from '../src/game.js';
+import {generate,fresh as freshNew,act,restore,serialize,DIRS,key} from '../src/game.js';
 function route(s,to){const q=[[s.x,s.y,[]]],seen=new Set([key(s.x,s.y)]);for(const [x,y,p] of q){if(key(x,y)===key(...to))return p;for(let d=0;d<4;d++){const nx=x+DIRS[d][0],ny=y+DIRS[d][1],k=key(nx,ny);if(s.map.grid[ny]?.[nx]===0&&!seen.has(k)){seen.add(k);q.push([nx,ny,[...p,d]]);}}}throw Error('unreachable');}
 function fight(s){for(let turn=0;turn<100&&s.phase==='battle';turn++){if(s.hp<=40&&s.potions)act(s,'potion');else if(s.enemy.turn%3===2)act(s,'guard');else if(s.focus>=3)act(s,'skill');else act(s,'attack');}}
 function walk(s,to){for(const d of route(s,to)){while(s.dir!==d)act(s,'right');act(s,'forward');if(s.phase==='battle')fight(s);if(s.phase==='dead')return;}}
@@ -10,3 +10,5 @@ test('battle skills, guard, potion, flee and boss',()=>{const s=fresh(1);const d
 test('stairs, extraction, defeat and fresh retry',()=>{const s=fresh(2);s.phase='stairs';const first=s.map;act(s,'stay');assert.equal(s.phase,'explore');s.phase='stairs';s.hp=50;s.light=10;act(s,'descend');assert.equal(s.floor,2);assert.equal(s.hp,68);assert.equal(s.light,35);assert.notDeepEqual(s.map,first);act(s,'return');assert.equal(s.phase,'returned');assert.equal(act(s,'forward'),false);const next=fresh(3);assert.equal(next.floor,1);assert.equal(next.gold,0);assert.equal(next.hp,100);});
 test('save round trips exploration and combat; invalid saves rejected',()=>{const s=fresh(9);assert.deepEqual(restore(serialize(s)),s);s.phase='battle';s.enemy={name:'苔角の獣',hp:15,maxHp:25,turn:2,boss:false};assert.deepEqual(restore(serialize(s)),s);for(const raw of [null,'','{','{}','null','{"version":2}',JSON.stringify({...s,hp:-1}),JSON.stringify({...s,map:{}}),JSON.stringify({...s,enemy:null})])assert.equal(restore(raw),null);const a=restore(serialize(s)),b=restore(serialize(s));act(a,'attack');act(b,'attack');assert.deepEqual(a,b);});
 test('100 complete expeditions can reach the relic and return using resources',()=>{for(let seed=0;seed<100;seed++){const s=fresh(seed);for(let floor=1;floor<=3;floor++){walk(s,s.map.exit);assert.notEqual(s.phase,'dead',`seed ${seed} floor ${floor}`);if(floor<3){assert.equal(s.phase,'stairs');act(s,'descend');}}assert.equal(s.relic,true,`seed ${seed}`);act(s,'return');assert.equal(s.phase,'won');}});
+
+function fresh(seed){return freshNew(seed,{legacy:true});}

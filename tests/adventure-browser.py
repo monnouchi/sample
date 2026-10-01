@@ -17,7 +17,7 @@ try:
    url=f'http://127.0.0.1:{server.server_port}'
    def fixture(mode='chest',light=95,enemy='苔角の獣',floor=1):
     page.goto(url)
-    page.evaluate('''async({mode,light,enemy,floor})=>{const {fresh,generate,DIRS,key}=await import('./src/game.js?v=20261001-adventure');const s=fresh(3);s.floor=floor;s.map=generate(3,floor);s.dir=s.map.grid[1][2]?2:1;s.light=light;s.map.events={};const [dx,dy]=DIRS[s.dir];if(mode==='chest')s.map.events[key(s.x+dx,s.y+dy)]='chest';if(mode==='battle'){s.phase='battle';s.enemy={name:enemy,hp:25,maxHp:25,turn:2,boss:false};}localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',{'mode':mode,'light':light,'enemy':enemy,'floor':floor})
+    page.evaluate('''async({mode,light,enemy,floor})=>{const {fresh,generate,DIRS,key}=await import('./src/game.js?v=20261001-adventure');const s=fresh(3,{legacy:true});s.floor=floor;s.map=generate(3,floor);s.dir=s.map.grid[1][2]?2:1;s.light=light;s.map.events={};const [dx,dy]=DIRS[s.dir];if(mode==='chest')s.map.events[key(s.x+dx,s.y+dy)]='chest';if(mode==='battle'){s.phase='battle';s.enemy={name:enemy,hp:25,maxHp:25,turn:2,boss:false};}localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',{'mode':mode,'light':light,'enemy':enemy,'floor':floor})
     page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
    get=lambda:page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")
    fixture();page.locator('[data-action=forward]').tap();expect(page.locator('#dialog')).to_be_visible()
@@ -36,10 +36,10 @@ try:
    assert get()['gold']==earned['gold'] and len(get()['rewards'])==1
    page.locator('#reward-history').tap();assert page.locator('.reward-record').count()==1;page.locator('[data-modal=close]').tap()
    fixture(light=9);expect(page.locator('#light-warning')).to_be_visible();page.locator('[data-action=forward]').tap();page.locator('#reward-skip').tap();page.locator('[data-modal=reward-close]').tap();expect(page.locator('#light-warning')).to_be_hidden()
-   fixture('empty',1);assert '次の一歩で0' in page.locator('#light-warning').inner_text();page.locator('[data-action=left]').tap();page.wait_for_timeout(250);assert get()['light']==1
-   page.locator('[data-action=right]').tap();page.wait_for_timeout(250);page.locator('[data-action=forward]').tap();page.wait_for_timeout(250);assert get()['light']==0 and get()['hp']==96;assert '移動するたび' in page.locator('#light-warning').inner_text()
+   fixture('empty',1);assert '次の一歩で0' in page.locator('#light-warning').text_content();page.locator('[data-action=left]').tap();page.wait_for_timeout(250);assert get()['light']==1
+   page.locator('[data-action=right]').tap();page.wait_for_timeout(250);page.locator('[data-action=forward]').tap();page.wait_for_timeout(250);assert get()['light']==0 and get()['hp']==96;assert '移動するたび' in page.locator('#light-warning').text_content()
    page.locator('#return').tap();page.locator('[data-modal=return]').tap();assert get()['phase']=='returned'
-   fixture('battle',0);assert '帰路の灯' not in page.locator('#light-warning').inner_text();assert '戦闘中' in page.locator('#light-warning').inner_text()
+   fixture('battle',0);assert '帰路の灯' not in page.locator('#light-warning').text_content();assert '戦闘中' in page.locator('#light-warning').text_content()
    page.emulate_media(reduced_motion='reduce');fixture();page.locator('[data-action=forward]').tap();assert page.locator('.reward-display').evaluate("e=>e.classList.contains('revealed')");expect(page.locator('#reward-skip')).to_be_hidden()
    assert not page.evaluate('document.documentElement.scrollWidth>innerWidth')
    close=page.locator('[data-modal=reward-close]');close.scroll_into_view_if_needed();box=close.bounding_box();assert box['height']>=44 and box['width']>=44

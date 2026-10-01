@@ -9,7 +9,7 @@ server=ThreadingHTTPServer(('127.0.0.1',0),partial(Quiet,directory='dist'));Thre
 try:
  with sync_playwright() as p:
   b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':390,'height':844},has_touch=True,is_mobile=True)
-  page.goto(f'http://127.0.0.1:{server.server_port}');page.locator('#start').tap();page.wait_for_timeout(250)
+  page.goto(f'http://127.0.0.1:{server.server_port}');page.locator('#start').tap();page.locator('[data-modal=companion-ao]').tap();page.wait_for_timeout(250)
   state=lambda:page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")
   before=state();page.locator('[data-action=forward]').tap();page.wait_for_timeout(250);assert state()['steps']==before['steps']+1
   for _ in range(3):page.locator('[data-action=right]').tap();page.wait_for_timeout(250)

@@ -14,7 +14,7 @@ try:
   errors=[];page.on('pageerror',lambda e:errors.append(str(e)));url=f'http://127.0.0.1:{server.server_port}'
   def fixture(floor=1,light=100,mode='empty'):
    page.goto(url)
-   page.evaluate('''async({floor,light,mode})=>{const {fresh,DIRS,key}=await import('./src/game.js?v=20261001-kpt4');const {chestTier}=await import('./src/rewards.js?v=20261001-kpt4');let s=fresh(3);if(mode==='gold'){for(let seed=0;seed<1000;seed++){const t=fresh(seed),[dx,dy]=DIRS[t.dir];if(chestTier(seed,1,1+dx,1+dy)==='gold'){s=t;break;}}}s.floor=floor;s.light=light;s.map.events={};const [dx,dy]=DIRS[s.dir];if(mode==='gold'||mode==='chest')s.map.events[key(1+dx,1+dy)]='chest';if(mode==='old')s.rewards=[{id:'3:5,5',floor:3,tier:'gold',gold:37,potions:1,light:2}];localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',{'floor':floor,'light':light,'mode':mode})
+   page.evaluate('''async({floor,light,mode})=>{const {fresh,DIRS,key}=await import('./src/game.js?v=20261001-kpt4');const {chestTier}=await import('./src/rewards.js?v=20261001-kpt4');let s=fresh(3,{legacy:true});if(mode==='gold'){for(let seed=0;seed<1000;seed++){const t=fresh(seed,{legacy:true}),[dx,dy]=DIRS[t.dir];if(chestTier(seed,1,1+dx,1+dy)==='gold'){s=t;break;}}}s.floor=floor;s.light=light;s.map.events={};const [dx,dy]=DIRS[s.dir];if(mode==='gold'||mode==='chest')s.map.events[key(1+dx,1+dy)]='chest';if(mode==='old')s.rewards=[{id:'3:5,5',floor:3,tier:'gold',gold:37,potions:1,light:2}];localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',{'floor':floor,'light':light,'mode':mode})
    page.reload();page.locator('#continue').tap();page.wait_for_timeout(220)
   def press(action):page.locator(f'[data-action={action}]').tap();page.wait_for_timeout(220)
   for floor in [1,2,3]:

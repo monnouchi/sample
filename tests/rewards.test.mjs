@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fresh,act,DIRS,key,serialize,restore} from '../src/game.js';
+import {fresh as freshNew,act,DIRS,key,serialize,restore} from '../src/game.js';
 import {chestTier,rewardGold,restoreRewards} from '../src/rewards.js';
 function chest(seed=3,light=95){const s=fresh(seed);s.light=light;const [dx,dy]=DIRS[s.dir];const k=key(s.x+dx,s.y+dy);s.map.events[k]='chest';return [s,k];}
 test('reward is awarded once, persisted before presentation, and unchanged by reload/re-entry',()=>{
@@ -27,3 +27,5 @@ test('low light costs only movement, causes death before chest grant, and return
  const a=fresh(3);a.light=1;a.map.events={};act(a,'forward');assert.equal(a.light,0);assert.equal(a.hp,96);act(a,'back');assert.equal(a.hp,92);act(a,'return');assert.equal(a.phase,'returned');
  const b=fresh(3);b.phase='battle';b.enemy={name:'敵',hp:25,maxHp:25,turn:0,boss:false};assert.equal(act(b,'return'),false);
 });
+
+function fresh(seed){return freshNew(seed,{legacy:true});}

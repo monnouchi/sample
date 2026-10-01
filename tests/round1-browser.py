@@ -19,7 +19,7 @@ try:
         def fixture(potions):
             page.goto(url)
             page.evaluate('''async count=>{
-                const {fresh}=await import('./src/game.js');const s=fresh(17);
+                const {fresh}=await import('./src/game.js');const s=fresh(17,{legacy:true});
                 s.hp=25;s.potions=count;s.phase='battle';
                 s.enemy={name:'苔角の獣',hp:1,maxHp:25,turn:0,boss:false};
                 localStorage.setItem('suito-save-v1',JSON.stringify(s));

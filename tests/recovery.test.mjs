@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fresh,act,DIRS,key,restore,serialize} from '../src/game.js';
+import {fresh as freshNew,act,DIRS,key,restore,serialize} from '../src/game.js';
 function battle(hp,focus=6){const s=fresh(3);s.hp=hp;s.focus=focus;s.phase='battle';s.enemy={name:'苔角の獣',hp:25,maxHp:25,turn:0,boss:false};return s;}
 function event(type,hp=100,focus=6,light=100){const s=fresh(3);s.hp=hp;s.focus=focus;s.light=light;const [dx,dy]=DIRS[s.dir];s.map.events[key(s.x+dx,s.y+dy)]=type;act(s,'forward');return s;}
 test('battle potion logs capped gain separately from unchanged enemy damage',()=>{
@@ -22,3 +22,5 @@ test('chest reports gain after movement cost; stairs report capped gains includi
  const s=fresh(1);s.phase='stairs';s.hp=95;s.light=98;s.focus=6;act(s,'descend');assert.equal(s.hp,100);assert.equal(s.light,100);assert.match(s.log[0],/体力が5回復。灯りが2回復。気力は満タン（回復なし）/);
  s.phase='stairs';act(s,'descend');assert.match(s.log[0],/体力は満タン（回復なし）/);assert.match(s.log[0],/灯りは満タン（回復なし）/);
 });
+
+function fresh(seed){return freshNew(seed,{legacy:true});}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CHESTS,chestTier,restoreRewards} from '../src/rewards.js';
-import {fresh,act,DIRS,key,restore,serialize} from '../src/game.js';
+import {fresh as freshNew,act,DIRS,key,restore,serialize} from '../src/game.js';
 import {returnDescription,lightBand,lightAnnouncement} from '../src/messages.js';
 test('return copy distinguishes reaching floor3 without claiming a relic',()=>{
  for(const floor of [1,2])assert.match(returnDescription(floor),/届かなくても/);
@@ -27,3 +27,5 @@ test('announcements change only at bands and safe initial entry stays silent',()
  for(const light of [50,11,10,9,8,7,6,5,4,3,2,1,0,0,0,15,16]){const band=lightBand(light),message=lightAnnouncement(band,previous);if(message)emitted.push(message);previous=band;}
  assert.equal(emitted.length,4);assert.match(emitted[0],/少なく/);assert.match(emitted[1],/残り1/);assert.match(emitted[2],/尽き/);assert.match(emitted[3],/解除/);
 });
+
+function fresh(seed){return freshNew(seed,{legacy:true});}
