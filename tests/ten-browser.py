@@ -20,7 +20,7 @@ try:
    page.locator('#start').tap();page.locator(f'[data-modal=companion-{companion}]').tap()
    state=lambda:page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")
    assert state()['version']==2 and state()['companion']==companion
-   assert name in page.locator('#message').inner_text()
+   assert name in page.locator('#companion-talk').inner_text()
    page.locator('#story').tap();assert name in page.locator('#dialog-content').inner_text();page.locator('[data-modal=close]').tap()
    saved=state();page.reload();page.locator('#continue').tap();assert state()==saved
    for floor in [4,8]:
