@@ -45,7 +45,7 @@ try:
    assert page.evaluate("localStorage.getItem('suito-save-v1')")==saved
    page.locator('#start').tap();page.locator('[data-modal=new]').tap();page.locator('[data-modal=companion-mei]').tap()
    expect(page.locator('#play')).to_be_visible();assert page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1')).companion")=='mei'
-   expect(page.locator('.journal-mark .companion-portrait')).to_be_visible()
+   expect(page.locator('#companion-talk .companion-portrait')).to_be_visible()
    assert not page.evaluate("document.documentElement.classList.contains('companion-open')")
    assert not errors,errors;print(f'PASS {w}x{h} large={large}: footer always visible, inner scroll, portraits, keyboard/Escape/cancel/save/start',flush=True);page.close()
   browser.close()

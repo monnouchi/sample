@@ -30,7 +30,7 @@ try:
     assert [state()['hp'],state()['light'],state()['focus'],state()['potions']]==[100,100,6,n+2]
     expect(page.locator('#rest')).to_be_disabled();page.reload();page.locator('#continue').tap();expect(page.locator('#rest')).to_be_disabled();assert state()['potions']==n+2
    page.goto(url)
-   page.evaluate('''()=>{const s=JSON.parse(localStorage.getItem('suito-save-v1'));s.phase='battle';s.hp=50;s.focus=6;s.supportCharge=1;s.enemy={name:'根絡みの番人',hp:100,maxHp:100,turn:0,boss:false};localStorage.setItem('suito-save-v1',JSON.stringify(s));}''')
+   page.evaluate('''()=>{const s=JSON.parse(localStorage.getItem('suito-save-v1'));s.phase='battle';s.strikeRng=1;s.hp=50;s.focus=6;s.supportCharge=1;s.enemy={name:'根絡みの番人',hp:100,maxHp:100,turn:0,boss:false};localStorage.setItem('suito-save-v1',JSON.stringify(s));}''')
    page.reload();page.locator('#continue').tap();page.wait_for_timeout(420);page.locator('[data-action=skill]').tap()
    assert name in page.locator('#battle-feedback').inner_text()
    for w,h in [(390,650),(320,568),(844,390)]:

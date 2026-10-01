@@ -1,3 +1,4 @@
+import {restoreFind} from './loot.js?v=20261001-loot';
 export const CHESTS={
  common:{name:'苔木の宝箱',mark:'Ⅰ',color:'#c2ad7e',potions:1,lightMax:10},
  silver:{name:'月銀の宝箱',mark:'Ⅱ',color:'#c5e1e8',potions:1,lightMax:15},
@@ -19,7 +20,7 @@ export function restoreRewards(value,depth=3){
   const cap=item.lightMax===undefined?10:item.lightMax;
   if(![10,CHESTS[item.tier].lightMax].includes(cap)||!Number.isInteger(item.potions)||item.potions<1||item.potions>CHESTS[item.tier].potions)continue;
   if(!Number.isInteger(item.gold)||item.gold<18||item.gold>45||!Number.isInteger(item.light)||item.light<0||item.light>cap)continue;
-  found.add(item.id);items.push({id:item.id,floor:item.floor,tier:item.tier,gold:item.gold,potions:item.potions,light:item.light,...(item.lightMax===undefined?{}:{lightMax:cap})});
+  const find=restoreFind(item.find);found.add(item.id);items.push({... (find?{find}:{}),id:item.id,floor:item.floor,tier:item.tier,gold:item.gold,potions:item.potions,light:item.light,...(item.lightMax===undefined?{}:{lightMax:cap})});
   if(items.length===depth*3)break;
  }
  return items;
