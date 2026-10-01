@@ -1,8 +1,8 @@
-import {themeFloor} from './companions.js?v=20261001-ten';
-import {projectObjects,drawChest,drawSpring} from './objects.js?v=20261001-ten';
-import {chestTier,CHESTS} from './rewards.js?v=20261001-ten';
-import {DIRS,key,random} from './game.js?v=20261001-ten';
-import {illumination} from './view.js';
+import {themeFloor} from './companions.js?v=20261001-cachefix';
+import {projectObjects,drawChest,drawSpring} from './objects.js?v=20261001-cachefix';
+import {chestTier,CHESTS} from './rewards.js?v=20261001-cachefix';
+import {DIRS,key,random} from './game.js?v=20261001-cachefix';
+import {illumination} from './view.js?v=20261001-cachefix';
 const W=840,H=640;
 function ellipse(c,x,y,rx,ry,color){c.fillStyle=color;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();}
 function path(c,points,color){c.fillStyle=color;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();}

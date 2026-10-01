@@ -1,14 +1,16 @@
-import {GEAR,findDescription} from './loot.js?v=20261001-dialogue-split';
-import {portrait} from './portraits.js?v=20261001-chooser';
-import {COMPANIONS,companionOf,maxFloor,historyLimit,themeFloor,speak} from './companions.js?v=20261001-ten';
-import {ORIGIN,layersFor,GUARDIAN,SEED,ENDING} from './story.js?v=20261001-ten';
-import {ForestAudio,actionCues} from './audio.js?v=20261001-ten';
-import {returnDescription,lightBand,lightAnnouncement} from './messages.js?v=20261001-ten';
-import {CHESTS} from './rewards.js?v=20261001-ten';
-import {protectControls} from './controls.js?v=20261001-chooser';
-import {fresh,act,restore,serialize,SAVE_KEY,floorName,DIRS,key} from './game.js?v=20261001-dialogue-split';
-import {drawScene,drawMap} from './render.js?v=20261001-ten';
-import {cameraAt,beginMotion} from './view.js';
+import {prepareDOM} from './dom.js?v=20261001-cachefix';
+import {GEAR,findDescription} from './loot.js?v=20261001-cachefix';
+import {portrait} from './portraits.js?v=20261001-cachefix';
+import {COMPANIONS,companionOf,maxFloor,historyLimit,themeFloor,speak} from './companions.js?v=20261001-cachefix';
+import {ORIGIN,layersFor,GUARDIAN,SEED,ENDING} from './story.js?v=20261001-cachefix';
+import {ForestAudio,actionCues} from './audio.js?v=20261001-cachefix';
+import {returnDescription,lightBand,lightAnnouncement} from './messages.js?v=20261001-cachefix';
+import {CHESTS} from './rewards.js?v=20261001-cachefix';
+import {protectControls} from './controls.js?v=20261001-cachefix';
+import {fresh,act,restore,serialize,SAVE_KEY,floorName,DIRS,key} from './game.js?v=20261001-cachefix';
+import {drawScene,drawMap} from './render.js?v=20261001-cachefix';
+import {cameraAt,beginMotion} from './view.js?v=20261001-cachefix';
+prepareDOM();
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
 
 const escapeText=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -44,9 +46,10 @@ function start(resume=false,companion=null){if(!resume&&!companion){chooseCompan
 
 // Move existing nodes, preserving map/history/log state and handlers.
 const extraNodes=['mission','light-warning','message','event-history','reward-history','story','kit','camp','treasure','map-button'].map(id=>{
- const node=id==='message'?$(id).parentElement:id==='treasure'?$(id).parentElement:$(id);
+ const element=$(id);if(!element)return null;
+ const node=['message','treasure'].includes(id)?element.parentElement:element;if(!node)return null;
  const anchor=document.createComment('exploration position');node.before(anchor);return {node,anchor};
-});
+}).filter(Boolean);
 let inBattle=false,explorationScroll=0;
 function battleLayout(battle){
  if(battle===inBattle)return;input.transition();clearEffect();
