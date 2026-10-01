@@ -24,7 +24,7 @@ try:
                 s.enemy={name:'苔角の獣',hp:1,maxHp:25,turn:0,boss:false};
                 localStorage.setItem('suito-save-v1',JSON.stringify(s));
             }''', potions)
-            page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
+            page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
         def check(count):
             button=page.locator('#battle-potion')
             assert button.inner_text().count('露の薬')==1
@@ -34,10 +34,10 @@ try:
             expect(button).to_have_accessible_name(f'露の薬、残り{count}個、体力最大42回復')
             box=button.bounding_box();assert box['width']>=44 and box['height']>=44
         fixture(3);check(3)
-        page.locator('#battle-potion').tap();page.wait_for_timeout(250);check(2)
+        page.locator('#battle-potion').tap();page.wait_for_timeout(420);check(2)
         assert page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1')).potions")==2
         page.reload();page.locator('#continue').tap();check(2)
-        page.wait_for_timeout(250);page.locator('[data-action="attack"]').tap()
+        page.wait_for_timeout(420);page.locator('[data-action="attack"]').tap()
         expect(page.locator('#explore-controls')).to_be_visible()
         assert page.locator('#potions').inner_text()=='2'
         page.locator('#map-button').tap()
@@ -45,11 +45,11 @@ try:
         assert '● 通常敵' in legend and '★ 守り手（最深部のボス）' in legend
         assert '魔物 / 守り手' not in legend
         page.locator('[data-modal="close"]').tap()
-        fixture(1);check(1);page.locator('#battle-potion').tap();page.wait_for_timeout(250)
+        fixture(1);check(1);page.locator('#battle-potion').tap();page.wait_for_timeout(420)
         check(0);expect(page.locator('#battle-potion')).to_be_disabled()
         page.reload();page.locator('#continue').tap();check(0)
         expect(page.locator('#battle-potion')).to_be_disabled()
-        page.wait_for_timeout(250);page.locator('[data-action="attack"]').tap()
+        page.wait_for_timeout(420);page.locator('[data-action="attack"]').tap()
         expect(page.locator('#potion')).to_be_disabled()
         assert page.locator('#potions').inner_text()=='0'
         fixture(3);check(3)

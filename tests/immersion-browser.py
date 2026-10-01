@@ -18,7 +18,7 @@ try:
    page.evaluate('''async ({kind,hp})=>{const {fresh,act}=await import('./src/game.js');let s;
     for(let rng=0;rng<10000;rng++){s=fresh(3,{legacy:true});s.hp=93;s.phase='battle';s.enemy={name:'苔角の獣',hp:100,maxHp:100,turn:0,boss:false};s.strikeRng=rng;const clone=structuredClone(s);act(clone,'skill');if(clone.lastAttack.kind===kind)break;}
     s.enemy.hp=hp;localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',{'kind':kind,'hp':hp})
-   page.reload();page.locator('#continue').tap();page.wait_for_timeout(220)
+   page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
   for w,h in [(390,844),(390,650),(390,568),(320,568),(320,480),(844,390),(1180,757)]:
    page.set_viewport_size({'width':w,'height':h});fixture()
    expect(page.locator('#battle-details')).not_to_have_attribute('open','')

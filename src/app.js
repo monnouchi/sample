@@ -1,14 +1,15 @@
+import {portrait} from './portraits.js?v=20261001-chooser';
 import {COMPANIONS,companionOf,maxFloor,historyLimit,themeFloor,speak} from './companions.js?v=20261001-ten';
 import {ORIGIN,layersFor,GUARDIAN,SEED,ENDING} from './story.js?v=20261001-ten';
 import {ForestAudio,actionCues} from './audio.js?v=20261001-ten';
 import {returnDescription,lightBand,lightAnnouncement} from './messages.js?v=20261001-ten';
 import {CHESTS} from './rewards.js?v=20261001-ten';
-import {protectControls} from './controls.js';
+import {protectControls} from './controls.js?v=20261001-chooser';
 import {fresh,act,restore,serialize,SAVE_KEY,floorName,DIRS,key} from './game.js?v=20261001-dialogue';
 import {drawScene,drawMap} from './render.js?v=20261001-ten';
 import {cameraAt,beginMotion} from './view.js';
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
-protectControls();
+
 const titleState=fresh(188);
 let effectTimer,finishTimer=null,impactState=null;
 function finishStrike(){clearTimeout(finishTimer);finishTimer=null;impactState=null;clearEffect();render();}
@@ -22,15 +23,21 @@ function revealReward(){stopRewardTimers();if(!document.querySelector('.reward-d
 function drawView(time=performance.now()){const camera=cameraAt(motion,time);if(motion&&!camera)motion=null;scene.dataset.moving=String(Boolean(camera));drawScene(scene,impactState||state||titleState,reducedMotion.matches?0:time,camera);}
 reducedMotion.addEventListener('change',()=>{motion=null;if(reducedMotion.matches&&finishTimer)finishStrike();if(reducedMotion.matches&&modalType==='reward')revealReward();drawView();});
 let state=null,saved=null,muted=true,storageOK=true,modalType='',lastAction=0;
+const input=protectControls(document,{getMode:()=>`${state?.phase||'title'}:${modalType}`});
 try{saved=restore(localStorage.getItem(SAVE_KEY));muted=localStorage.getItem('suito-sound')!=='on';}catch{storageOK=false;}
 if(saved){if(['dead','won','returned'].includes(saved.phase))$('last-result').hidden=false;else $('continue').hidden=false;}
 const audio=new ForestAudio({onError:()=>{muted=true;updateSound();}});audio.setMuted(muted);
 function sound(kind){void audio.play(kind,{floor:themeFloor(state),step:state?.steps||0});}
 function updateSound(){$('sound').textContent=muted?'音 OFF':'音 ON';$('sound').setAttribute('aria-pressed',String(!muted));$('sound').setAttribute('aria-label',muted?'効果音をオンにする':'効果音をオフにする');}
 function save(){try{localStorage.setItem(SAVE_KEY,serialize(state));storageOK=true;}catch{storageOK=false;}$('save-status').textContent=storageOK?'自動保存済み':'保存不可 · この画面で継続';}
-function open(content,type){if(finishTimer)finishStrike();clearEffect();if(!['reward','relic','result'].includes(type))audio.stop();stopRewardTimers();if(dialog.open)dialog.close();modalType=type;$('dialog-content').innerHTML=content;if(['help','stairs'].includes(type)&&companionOf(state)){for(const p of $('dialog-content').querySelectorAll('p')){p.prepend(`${companionOf(state).name}「`);p.append('」');}}dialog.showModal();}
-function close(){if(modalType==='reward')audio.stop();stopRewardTimers();dialog.close();modalType='';}
-function chooseCompanion(){open(`<span class="eyebrow">十層の地下庭へ</span><h2 id="dialog-title">誰と、灯を守る？</h2><p>ひとりを選ぶと探索が始まります。同行者は帰還まで変えられません。</p>${Object.entries(COMPANIONS).map(([id,c])=>`<button class="companion-choice" data-modal="companion-${id}"><strong>${c.mark} ${c.name} · ${c.role}</strong><small>${c.description}</small><span>「${c.intro}」</span></button>`).join('')}<button data-modal="close">まだ出発しない</button>`,'companion');}
+let companionScroll=null,companionOpener=null;
+function lockCompanion(){companionScroll=window.scrollY;companionOpener=document.activeElement;document.documentElement.style.setProperty('--modal-scroll-top',`-${companionScroll}px`);document.documentElement.classList.add('companion-open');}
+function unlockCompanion(){if(companionScroll===null)return;const y=companionScroll;companionScroll=null;document.documentElement.classList.remove('companion-open');document.documentElement.style.removeProperty('--modal-scroll-top');window.scrollTo({top:y,behavior:'instant'});if(companionOpener?.isConnected)companionOpener.focus({preventScroll:true});companionOpener=null;}
+dialog.addEventListener('close',()=>{if(!dialog.open)unlockCompanion();});
+function open(content,type){if(finishTimer)finishStrike();clearEffect();if(!['reward','relic','result'].includes(type))audio.stop();stopRewardTimers();if(dialog.open)dialog.close();unlockCompanion();modalType=type;dialog.dataset.kind=type;$('dialog-content').innerHTML=content;if(['help','stairs'].includes(type)&&companionOf(state)){for(const p of $('dialog-content').querySelectorAll('p')){p.prepend(`${companionOf(state).name}「`);p.append('」');}}if(type==='companion')lockCompanion();dialog.showModal();if(type==='companion')$('dialog-title').focus({preventScroll:true});}
+function close(){if(modalType==='reward')audio.stop();stopRewardTimers();dialog.close();unlockCompanion();modalType='';}
+function chooseCompanion(){open(`<header class="companion-header"><span class="eyebrow">十層の地下庭へ</span><h2 id="dialog-title" tabindex="-1">誰と、灯を守る？</h2></header><div class="companion-list" tabindex="0" role="region" aria-label="同行者の説明と選択"><p>ひとりを選ぶと探索が始まります。同行者は帰還まで変えられません。</p>${Object.entries(COMPANIONS).map(([id,c])=>`<button class="companion-choice" data-modal="companion-${id}">${portrait(id)}<strong>${c.mark} ${c.name} · ${c.role}</strong><small>${c.description}</small><span>「${c.intro}」</span></button>`).join('')}</div><footer class="companion-footer"><button data-modal="close">まだ出発しない</button></footer>`,'companion');}
+
 function start(resume=false,companion=null){if(!resume&&!companion){chooseCompanion();return;}clearEffect();audio.stop();close();motion=null;relicNoticeShown=false;lastLightBand=null;$('light-announcement').textContent='';state=resume&&saved?saved:fresh(undefined,{companion});$('intro').hidden=true;$('play').hidden=false;$('start-note').hidden=true;$('map-button').hidden=false;save();render();if(!state.pendingReward)sound('enter');}
 
 // Move existing nodes, preserving map/history/log state and handlers.
@@ -40,7 +47,7 @@ const extraNodes=['mission','light-warning','message','reward-history','story','
 });
 let inBattle=false,explorationScroll=0;
 function battleLayout(battle){
- if(battle===inBattle)return;clearEffect();
+ if(battle===inBattle)return;input.transition();clearEffect();
  inBattle=battle;$('app').classList.toggle('in-battle',battle);$('battle-details').hidden=!battle;$('battle-details').open=false;
  if(battle){explorationScroll=window.scrollY;for(const {node} of extraNodes)$('battle-extra').append(node);window.scrollTo({top:0,behavior:'instant'});}
  else{for(const {node,anchor} of extraNodes)anchor.after(node);window.scrollTo({top:explorationScroll,behavior:'instant'});}
@@ -60,7 +67,7 @@ function render(){
  $('mission').classList.toggle('complete',s.relic);$('mission-return').hidden=!s.relic;$('mission-return').disabled=s.phase==='battle';
  updateLightWarning(s);$('reward-history').textContent=`宝箱の履歴 ${s.rewards?.length||0}/${historyLimit(s)}`;
  const battle=s.phase==='battle';battleLayout(battle);$('battle-feedback').textContent=battleFeedback(s)+(s.supportLog?` ／ ${s.supportLog}`:'');
- const companion=companionOf(s);$('companion-info').hidden=!companion;$('companion-info').textContent=companion?`${companion.mark} ${companion.name} · ${companion.role}「${companion.description}」`:'';
+ const companion=companionOf(s);const mark=document.querySelector('.journal-mark'),portraitId=companion?s.companion:'';if(mark.dataset.companion!==portraitId){mark.dataset.companion=portraitId;mark.innerHTML=companion?portrait(portraitId,true):'✧';}$('companion-info').hidden=!companion;$('companion-info').textContent=companion?`${companion.mark} ${companion.name} · ${companion.role}「${companion.description}」`:'';
  const campHere=['rest','rest-used'].includes(s.map.events[key(s.x,s.y)]);$('camp').hidden=!campHere||s.phase!=='explore';$('camp-title').textContent=`第${s.floor}層 · ${floorName(s)}`;$('rest').disabled=s.rested?.includes(s.floor)||s.map.events[key(s.x,s.y)]==='rest-used';$('rest').textContent=$('rest').disabled?'補給済み · この場所では一度だけ':'休む · 全回復と薬2個（一度だけ）';$('explore-controls').hidden=battle;$('battle-controls').hidden=!battle;$('enemy-hud').hidden=!battle;$('potion').disabled=!s.potions||s.hp===100;
  $('enemy-hud').classList.toggle('boss',Boolean(s.enemy?.boss));
  if(battle){$('encounter-label').textContent=s.enemy.boss?'最深部のボス · 退避不可':'魔物との遭遇';$('enemy-name').textContent=s.enemy.name;$('enemy-hp').style.width=`${s.enemy.hp/s.enemy.maxHp*100}%`;$('battle-enemy').textContent=(s.enemy.boss?'最深部のボス：':'')+s.enemy.name;$('intent').textContent=s.enemy.turn%3===2?'次は強撃。身を守ると被害を軽減':'次は通常攻撃。こちらの行動後に反撃';$('battle-enemy').parentElement.classList.toggle('heavy',s.enemy.turn%3===2);document.querySelector('[data-action="skill"]').disabled=s.focus<3;$('battle-potion').disabled=!s.potions||s.hp===100;$('battle-potion-count').textContent=`×${s.potions}`;$('battle-potion').setAttribute('aria-label',`露の薬、残り${s.potions}個、体力最大42回復`);$('flee').disabled=s.enemy.boss;}
@@ -118,9 +125,10 @@ $('mission-return').onclick=()=>$('return').click();
 $('potion').onclick=()=>dispatch('potion');$('rest').onclick=()=>dispatch('rest');
 for(const b of document.querySelectorAll('[data-action]'))b.onclick=()=>dispatch(b.dataset.action);
 $('dialog-content').onclick=e=>{const a=e.target.closest('[data-modal]')?.dataset.modal;if(!a)return;const old=modalType;if(a==='reward-skip'){revealReward();return;}if(old==='reward')acknowledgeReward();close();if(a.startsWith('companion-')){start(false,a.slice(10));return;}if(a==='retry'||a==='new'){start();return;}if(a==='title'){audio.stop();battleLayout(false);motion=null;saved=state;state=null;$('intro').hidden=false;$('play').hidden=true;$('continue').hidden=true;$('last-result').hidden=false;$('start-note').hidden=false;$('enemy-hud').hidden=true;$('floor-label').textContent='星眠りの森';render();return;}if(a==='close'||a==='reward-close'){if(old==='companion'&&state&&['won','dead','returned'].includes(state.phase)){result();return;}if(old==='help'&&state?.phase==='stairs')stairs();return;}if(act(state,a)){if(a==='descend')sound('enter');if(a==='return')sound('return');}save();render();};
-dialog.addEventListener('cancel',e=>{if(modalType==='companion'&&state&&['won','dead','returned'].includes(state.phase)){e.preventDefault();close();result();return;}if(['result','stairs'].includes(modalType)){e.preventDefault();return;}if(modalType==='reward'){acknowledgeReward();audio.stop();}stopRewardTimers();modalType='';});
+dialog.addEventListener('keydown',e=>{if(modalType!=='companion'||e.key!=='Tab')return;const items=[...dialog.querySelectorAll('.companion-list,[data-modal]')],first=items[0],last=items.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===$('dialog-title'))){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}});
+dialog.addEventListener('cancel',e=>{if(modalType==='companion'&&state&&['won','dead','returned'].includes(state.phase)){e.preventDefault();close();result();return;}if(['result','stairs'].includes(modalType)){e.preventDefault();return;}if(modalType==='reward'){acknowledgeReward();audio.stop();}stopRewardTimers();e.preventDefault();close();});
 window.addEventListener('keydown',e=>{if(dialog.open||!state||e.repeat)return;const a={ArrowUp:'forward',w:'forward',ArrowDown:'back',s:'back',ArrowLeft:'left',a:'left',ArrowRight:'right',d:'right','1':'attack','2':'skill','3':'guard'}[e.key];if(a){e.preventDefault();dispatch(a);}});
-document.addEventListener('visibilitychange',()=>{motion=null;if(document.hidden){if(finishTimer)finishStrike();clearEffect();audio.background();if(modalType==='reward'){stopRewardTimers();document.querySelector('.reward-display')?.classList.add('revealed');if($('reward-skip'))$('reward-skip').hidden=true;}}if(state)save();});
+document.addEventListener('visibilitychange',()=>{motion=null;if(document.hidden){input.reset();if(finishTimer)finishStrike();clearEffect();audio.background();if(modalType==='reward'){stopRewardTimers();document.querySelector('.reward-display')?.classList.add('revealed');if($('reward-skip'))$('reward-skip').hidden=true;}}if(state)save();});
 // Resume only on a fresh gesture; never replay old cues after an interruption.
 document.addEventListener('pointerdown',()=>{void audio.unlock();},{passive:true});document.addEventListener('keydown',()=>{void audio.unlock();});
 let frame=0;function animate(time){if(!document.hidden && time-frame>(motion?15:80)){drawView(time);frame=time;}requestAnimationFrame(animate);}render();requestAnimationFrame(animate);

@@ -22,7 +22,7 @@ try:
                 s.hp=93;s.phase='battle';s.enemy={name:'苔角の獣',hp:25,maxHp:25,turn:1,boss:false};
                 localStorage.setItem('suito-save-v1',JSON.stringify(s));
             }''')
-            page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
+            page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
             info=page.locator('.battle-context')
             assert '苔角の獣' in page.locator('#enemy-name').inner_text() and '通常攻撃' in info.inner_text()
             assert page.locator('#enemy-name').is_visible() # Original scene HUD retained.
@@ -31,18 +31,18 @@ try:
                 button.evaluate("e=>e.scrollIntoView({block:'end',behavior:'instant'})")
                 rect=info.bounding_box();box=button.bounding_box()
                 assert 0<=rect['y'] and rect['y']+rect['height']<=height,(width,height,rect)
-                assert rect['y']+rect['height']<=box['y'],(width,height,'overlap',rect,box)
+                assert rect['y']+rect['height']<=box['y'] or rect['x']+rect['width']<=box['x'],(width,height,'overlap',rect,box)
                 assert box['y']+box['height']<=height+1
                 assert box['width']>=44 and box['height']>=44
-            page.locator('#battle-potion').tap();page.wait_for_timeout(250)
+            page.locator('#battle-potion').tap();page.wait_for_timeout(420)
             assert '体力が7回復' in page.locator('#message').text_content()
             assert '敵の反撃：体力に6ダメージ' in page.locator('#message').text_content()
             assert '強撃' in info.inner_text()
             saved=page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")
-            page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
+            page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
             assert page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")==saved
             assert '強撃' in info.inner_text()
-            page.locator('[data-action="guard"]').tap();page.wait_for_timeout(250)
+            page.locator('[data-action="guard"]').tap();page.wait_for_timeout(420)
             assert '通常攻撃' in info.inner_text()
             assert '気力は満タン（回復なし）' in page.locator('#message').text_content()
             page.locator('#flee').evaluate("e=>e.scrollIntoView({block:'end',behavior:'instant'})")

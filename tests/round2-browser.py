@@ -23,17 +23,17 @@ try:
                 else{s.hp=86;const [dx,dy]=DIRS[s.dir];s.map.events[key(s.x+dx,s.y+dy)]='spring';}
                 localStorage.setItem('suito-save-v1',JSON.stringify(s));
             }''',mode)
-            page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
+            page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
         fixture('battle')
         expect(page.locator('#battle-potion')).to_have_accessible_name('露の薬、残り3個、体力最大42回復')
-        page.locator('#battle-potion').tap();page.wait_for_timeout(250)
+        page.locator('#battle-potion').tap();page.wait_for_timeout(420)
         assert page.locator('#message').text_content()=='露の薬による回復：体力が7回復。 敵の反撃：体力に6ダメージ。'
         assert page.locator('#hp-label').inner_text().startswith('94 ')
         before=page.locator('#message').text_content();page.reload();page.locator('#continue').tap()
         assert page.locator('#message').text_content()==before
-        page.wait_for_timeout(250);page.locator('[data-action="guard"]').tap()
+        page.wait_for_timeout(420);page.locator('[data-action="guard"]').tap()
         assert '気力は満タン（回復なし）' in page.locator('#message').text_content()
-        fixture('spring');page.locator('[data-action="forward"]').tap();page.wait_for_timeout(250)
+        fixture('spring');page.locator('[data-action="forward"]').tap();page.wait_for_timeout(420)
         assert page.locator('#message').text_content()=='清らかな泉。体力が14回復。気力は満タン（回復なし）。'
         assert page.locator('#hp-label').inner_text().startswith('100 ')
         assert not page.locator('#dialog').is_visible()

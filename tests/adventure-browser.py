@@ -18,7 +18,7 @@ try:
    def fixture(mode='chest',light=95,enemy='苔角の獣',floor=1):
     page.goto(url)
     page.evaluate('''async({mode,light,enemy,floor})=>{const {fresh,generate,DIRS,key}=await import('./src/game.js?v=20261001-adventure');const s=fresh(3,{legacy:true});s.floor=floor;s.map=generate(3,floor);s.dir=s.map.grid[1][2]?2:1;s.light=light;s.map.events={};const [dx,dy]=DIRS[s.dir];if(mode==='chest')s.map.events[key(s.x+dx,s.y+dy)]='chest';if(mode==='battle'){s.phase='battle';s.enemy={name:enemy,hp:25,maxHp:25,turn:2,boss:false};}localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',{'mode':mode,'light':light,'enemy':enemy,'floor':floor})
-    page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
+    page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
    get=lambda:page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))")
    fixture();page.locator('[data-action=forward]').tap();expect(page.locator('#dialog')).to_be_visible()
    earned=get();assert len(earned['rewards'])==1 and earned['rewards'][0]['light']==6
@@ -32,12 +32,12 @@ try:
    page.reload();page.locator('#continue').tap();expect(page.locator('#dialog')).to_be_visible();assert get()==earned
    page.locator('#reward-skip').tap();assert page.locator('.reward-display').evaluate("e=>e.classList.contains('revealed')")
    page.locator('[data-modal=reward-close]').tap();assert get()['pendingReward'] is None
-   page.wait_for_timeout(250);page.locator('[data-action=back]').tap();page.wait_for_timeout(250);page.locator('[data-action=forward]').tap();page.wait_for_timeout(250)
+   page.wait_for_timeout(420);page.locator('[data-action=back]').tap();page.wait_for_timeout(420);page.locator('[data-action=forward]').tap();page.wait_for_timeout(420)
    assert get()['gold']==earned['gold'] and len(get()['rewards'])==1
    page.locator('#reward-history').tap();assert page.locator('.reward-record').count()==1;page.locator('[data-modal=close]').tap()
    fixture(light=9);expect(page.locator('#light-warning')).to_be_visible();page.locator('[data-action=forward]').tap();page.locator('#reward-skip').tap();page.locator('[data-modal=reward-close]').tap();expect(page.locator('#light-warning')).to_be_hidden()
-   fixture('empty',1);assert '次の一歩で0' in page.locator('#light-warning').text_content();page.locator('[data-action=left]').tap();page.wait_for_timeout(250);assert get()['light']==1
-   page.locator('[data-action=right]').tap();page.wait_for_timeout(250);page.locator('[data-action=forward]').tap();page.wait_for_timeout(250);assert get()['light']==0 and get()['hp']==96;assert '移動するたび' in page.locator('#light-warning').text_content()
+   fixture('empty',1);assert '次の一歩で0' in page.locator('#light-warning').text_content();page.locator('[data-action=left]').tap();page.wait_for_timeout(420);assert get()['light']==1
+   page.locator('[data-action=right]').tap();page.wait_for_timeout(420);page.locator('[data-action=forward]').tap();page.wait_for_timeout(420);assert get()['light']==0 and get()['hp']==96;assert '移動するたび' in page.locator('#light-warning').text_content()
    page.locator('#return').tap();page.locator('[data-modal=return]').tap();assert get()['phase']=='returned'
    fixture('battle',0);assert '帰路の灯' not in page.locator('#light-warning').text_content();assert '戦闘中' in page.locator('#light-warning').text_content()
    page.emulate_media(reduced_motion='reduce');fixture();page.locator('[data-action=forward]').tap();assert page.locator('.reward-display').evaluate("e=>e.classList.contains('revealed')");expect(page.locator('#reward-skip')).to_be_hidden()

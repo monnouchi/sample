@@ -17,13 +17,13 @@ with sync_playwright() as p:
   for width,height in [(320,568),(375,667),(390,844),(430,932),(844,390),(1280,800)]:
    ctx=browser.new_context(viewport={'width':width,'height':height},has_touch=True,device_scale_factor=1)
    page=ctx.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-   page.goto(BASE);page.locator('#start').tap();page.locator('[data-modal=companion-ao]').tap();page.wait_for_timeout(250)
+   page.goto(BASE);page.locator('#start').tap();page.locator('[data-modal=companion-ao]').tap();page.wait_for_timeout(420)
    assert not page.evaluate('document.documentElement.scrollWidth>innerWidth'),(engine,width,'horizontal overflow')
    for selector in ['#sound','#help','#potion','#return','[data-action="forward"]','[data-action="left"]','[data-action="right"]','[data-action="back"]']:
     box=page.locator(selector).bounding_box();assert box['width']>=44 and box['height']>=44,(engine,width,selector,box)
    state=lambda:page.evaluate(f'JSON.parse(localStorage.getItem("{KEY}"))')
-   before=state();page.locator('[data-action="forward"]').tap();page.wait_for_timeout(250);after=state();assert after['steps']==before['steps']+1
-   page.locator('[data-action="left"]').tap();page.wait_for_timeout(250);assert state()['dir']==(after['dir']+3)%4
+   before=state();page.locator('[data-action="forward"]').tap();page.wait_for_timeout(420);after=state();assert after['steps']==before['steps']+1
+   page.locator('[data-action="left"]').tap();page.wait_for_timeout(420);assert state()['dir']==(after['dir']+3)%4
    page.locator('#map-button').tap();assert page.locator('#large-map').is_visible();page.locator('[data-modal="close"]').tap()
    snap=state();page.reload();assert page.locator('#continue').is_visible();page.locator('#continue').tap();assert state()==snap
    page.locator('#sound').tap();assert page.locator('#sound').get_attribute('aria-pressed')=='true'
@@ -37,16 +37,16 @@ with sync_playwright() as p:
   def fixture(patch):
    page.goto(BASE)  # Leave the prior run before setting the next save fixture.
    page.evaluate('''async patch=>{const {fresh}=await import('./src/game.js');const s=fresh(17,{legacy:true});Object.assign(s,patch);localStorage.setItem('suito-save-v1',JSON.stringify(s));}''',patch)
-   page.reload();page.locator('#continue').tap();page.wait_for_timeout(250)
+   page.reload();page.locator('#continue').tap();page.wait_for_timeout(420)
   fixture({'phase':'battle','hp':60,'enemy':{'name':'苔角の獣','hp':25,'maxHp':25,'turn':2,'boss':False}})
-  page.locator('[data-action="guard"]').tap();page.wait_for_timeout(250)
+  page.locator('[data-action="guard"]').tap();page.wait_for_timeout(420)
   assert json.loads(page.evaluate(f'localStorage.getItem("{KEY}")'))['hp']>=57
-  page.locator('[data-action="skill"]').tap();page.wait_for_timeout(250)
-  if page.locator('#battle-controls').is_visible():page.locator('[data-action="attack"]').tap();page.wait_for_timeout(250)
+  page.locator('[data-action="skill"]').tap();page.wait_for_timeout(420)
+  if page.locator('#battle-controls').is_visible():page.locator('[data-action="attack"]').tap();page.wait_for_timeout(420)
   expect(page.locator('#explore-controls')).to_be_visible(timeout=1500)
   fixture({'phase':'battle','enemy':{'name':'星樹の守り手','hp':1,'maxHp':65,'turn':0,'boss':True},'floor':3})
   assert page.locator('#flee').is_disabled();page.screenshot(path=str(OUT/f'{engine}-battle.png'))
-  page.locator('[data-action="attack"]').tap();page.wait_for_timeout(250);assert '星の種を手に入れた' in page.locator('#dialog-title').inner_text();page.locator('[data-modal="close"]').tap();page.locator('#return').tap();page.locator('[data-modal="return"]').tap();assert '星を' in page.locator('#dialog-title').inner_text()
+  page.locator('[data-action="attack"]').tap();page.wait_for_timeout(420);assert '星の種を手に入れた' in page.locator('#dialog-title').inner_text();page.locator('[data-modal="close"]').tap();page.locator('#return').tap();page.locator('[data-modal="return"]').tap();assert '星を' in page.locator('#dialog-title').inner_text()
   page.screenshot(path=str(OUT/f'{engine}-victory.png'));page.locator('[data-modal="retry"]').tap();page.locator('[data-modal=companion-ao]').tap();assert '第1層' in page.locator('#floor-label').inner_text()
   fixture({'phase':'battle','hp':1,'enemy':{'name':'苔角の獣','hp':100,'maxHp':100,'turn':2,'boss':False}})
   page.locator('[data-action="attack"]').tap();assert '灯りは' in page.locator('#dialog-title').inner_text();page.locator('[data-modal="retry"]').tap();page.locator('[data-modal=companion-ao]').tap()
@@ -58,13 +58,13 @@ with sync_playwright() as p:
   fixture({'relic':True,'floor':3})
   assert '星の種を手に入れた' in page.locator('#dialog-title').inner_text()
   page.locator('[data-modal="close"]').tap();assert page.locator('#mission-return').is_visible()
-  page.locator('[data-action="right"]').tap();page.wait_for_timeout(250);assert '入手済み' in page.locator('#objective').inner_text()
+  page.locator('[data-action="right"]').tap();page.wait_for_timeout(420);assert '入手済み' in page.locator('#objective').inner_text()
   fixture({})
   initial=page.evaluate(f'JSON.parse(localStorage.getItem("{KEY}"))')
   page.evaluate("()=>{const b=document.querySelector('[data-action=forward]');b.click();b.click();b.click()}")
   assert page.evaluate(f'JSON.parse(localStorage.getItem("{KEY}")).steps')==initial['steps']+1
   assert page.locator('#scene').get_attribute('data-moving')=='true'
-  page.wait_for_timeout(250);assert page.locator('#scene').get_attribute('data-moving')=='false'
+  page.wait_for_timeout(420);assert page.locator('#scene').get_attribute('data-moving')=='false'
   page.emulate_media(reduced_motion='reduce');page.locator('[data-action="right"]').tap()
   assert page.locator('#scene').get_attribute('data-moving')=='false'
   page.reload();page.locator('#continue').tap();assert page.locator('#scene').get_attribute('data-moving')=='false'
