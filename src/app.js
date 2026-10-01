@@ -1,7 +1,9 @@
+import {protectControls} from './controls.js';
 import {fresh,act,restore,serialize,SAVE_KEY,FLOORS,DIRS,key} from './game.js?v=20260930-round2';
 import {drawScene,drawMap} from './render.js';
 import {cameraAt,beginMotion} from './view.js';
 const $=id=>document.getElementById(id),scene=$('scene'),dialog=$('dialog');
+protectControls();
 const titleState=fresh(188);
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let motion=null,relicNoticeShown=false;

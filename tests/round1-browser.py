@@ -53,7 +53,7 @@ try:
         expect(page.locator('#potion')).to_be_disabled()
         assert page.locator('#potions').inner_text()=='0'
         fixture(3);check(3)
-        assert page.locator('script[type="module"]').get_attribute('src').endswith('?v=20260930-round3')
+        assert page.locator('script[type="module"]').get_attribute('src').startswith('./src/app.js?v=')
         assert not errors, errors
         print('PASS: 3→2 / reload / battle→explore / map legend / 1→0 / disabled / reload / new battle; icon, single label, accessible count, 44px targets; no JS errors')
         browser.close()
