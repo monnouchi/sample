@@ -29,17 +29,17 @@ try:
    page.reload();page.wait_for_timeout(500)
    assert not errors,errors
    assert page.locator('#event-history').count()==1 and page.locator('#event-notice').count()==1
-   assert 'cachefix' in page.locator('link[rel=stylesheet]').get_attribute('href')
-   page.locator('#continue').tap();expect(page.locator('#play')).to_be_visible()
+   assert 'input-boundaries' in page.locator('link[rel=stylesheet]').get_attribute('href')
+   page.locator('#continue').tap();page.wait_for_timeout(420);expect(page.locator('#play')).to_be_visible()
    s=page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1'))");assert (s['seed'],s['hp'],s['gold'])==(31,73,51)
-   page.locator('#event-history').tap();page.locator('[data-modal=close]').tap()
+   page.locator('#event-history').tap();page.wait_for_timeout(420);page.locator('[data-modal=close]').tap();page.wait_for_timeout(420)
   print('PASS normal reload with stale HTML + repaired graph: title/continue/history and saved resources preserved',flush=True)
   page.unroute(url);page.route('**/src/app.js?*',lambda route:route.fulfill(body=oldapp,content_type='text/javascript'))
   errors.clear();page.reload();page.wait_for_timeout(500);assert not errors,errors
-  page.locator('#continue').tap();expect(page.locator('#play')).to_be_visible();assert not errors,errors
+  page.locator('#continue').tap();page.wait_for_timeout(420);expect(page.locator('#play')).to_be_visible();assert not errors,errors
   print('PASS current HTML + cached pre-loot app: retained compatibility anchor prevents null startup',flush=True)
   page.unroute('**/src/app.js?*');errors.clear();page.reload();page.wait_for_timeout(500)
-  page.locator('#start').tap();page.locator('[data-modal=new]').tap();page.locator('[data-modal=companion-mei]').tap();expect(page.locator('#play')).to_be_visible();assert not errors,errors
+  page.locator('#start').tap();page.wait_for_timeout(420);page.locator('[data-modal=new]').tap();page.wait_for_timeout(420);page.locator('[data-modal=companion-mei]').tap();page.wait_for_timeout(420);expect(page.locator('#play')).to_be_visible();assert not errors,errors
   print('PASS clean current assets: new adventure starts without console errors',flush=True)
   browser.close()
 finally:server.shutdown();server.server_close()

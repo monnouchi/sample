@@ -1,8 +1,8 @@
-import {say,migrateDialogue} from './dialogue.js?v=20261001-cachefix';
-import {GEAR,restoreKit,grantFind} from './loot.js?v=20261001-cachefix';
-import {COMPANIONS,maxFloor} from './companions.js?v=20261001-cachefix';
-import {LAYERS,layersFor} from './story.js?v=20261001-cachefix';
-import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-cachefix';
+import {say,migrateDialogue} from './dialogue.js?v=20261001-input-boundaries';
+import {GEAR,restoreKit,grantFind} from './loot.js?v=20261001-input-boundaries';
+import {COMPANIONS,maxFloor} from './companions.js?v=20261001-input-boundaries';
+import {LAYERS,layersFor} from './story.js?v=20261001-input-boundaries';
+import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-input-boundaries';
 export const SIZE = 11;
 export const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
 export const FLOORS = LAYERS.map(l=>l.title);

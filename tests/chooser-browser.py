@@ -19,7 +19,7 @@ try:
    page.reload();saved=page.evaluate("localStorage.getItem('suito-save-v1')")
    if large:page.add_style_tag(content='#dialog{--chooser-top:24px;--chooser-bottom:20px}')
    if large:page.add_style_tag(content='dialog h2{font-size:38px!important}dialog button{font-size:24px!important}.companion-choice strong{font-size:26px!important}.companion-choice small,.companion-choice>span,dialog p{font-size:20px!important}')
-   page.locator('#start').tap();backgroundY=page.evaluate('scrollY');page.locator('[data-modal=new]').tap()
+   page.locator('#start').tap();page.wait_for_timeout(420);backgroundY=page.evaluate('scrollY');page.locator('[data-modal=new]').tap();page.wait_for_timeout(420)
    expect(page.locator('#dialog-title')).to_be_focused()
    cancel=page.locator('.companion-footer button');body=page.locator('.companion-list');header=page.locator('.companion-header')
    for end in [False,True]:
@@ -41,9 +41,9 @@ try:
    assert not page.evaluate("document.documentElement.classList.contains('companion-open')")
    assert abs(page.evaluate('scrollY')-backgroundY)<2
    assert page.evaluate("localStorage.getItem('suito-save-v1')")==saved
-   page.locator('#start').tap();page.locator('[data-modal=new]').tap();cancel.tap()
+   page.locator('#start').tap();page.wait_for_timeout(420);page.locator('[data-modal=new]').tap();page.wait_for_timeout(420);cancel.tap();page.wait_for_timeout(420)
    assert page.evaluate("localStorage.getItem('suito-save-v1')")==saved
-   page.locator('#start').tap();page.locator('[data-modal=new]').tap();page.locator('[data-modal=companion-mei]').tap()
+   page.locator('#start').tap();page.wait_for_timeout(420);page.locator('[data-modal=new]').tap();page.wait_for_timeout(420);page.locator('[data-modal=companion-mei]').tap();page.wait_for_timeout(420)
    expect(page.locator('#play')).to_be_visible();assert page.evaluate("JSON.parse(localStorage.getItem('suito-save-v1')).companion")=='mei'
    expect(page.locator('#companion-talk .companion-portrait')).to_be_visible()
    assert not page.evaluate("document.documentElement.classList.contains('companion-open')")

@@ -1,11 +1,11 @@
 // Native click is the only pointer action path. Movement and scrolling stay native.
 export function protectControls(root=document,{getMode=()=>'',quietMs=360}={}){
  const pointers=new Map(),keys=new Set();let guarded=false,until=0,lastKey=null;
- const now=()=>performance.now(),game=button=>button?.matches('[data-action],#potion,#return,#rest,#mission-return');
+ const now=()=>performance.now(),game=button=>Boolean(button);
  const ready=()=>now()>=until&&!pointers.size&&!keys.size;
  const stop=event=>{event.preventDefault();event.stopImmediatePropagation();};
  root.addEventListener('pointerdown',event=>{
-  const button=event.target.closest('button');
+  const button=event.target.closest?.('button');
   if(guarded&&ready())guarded=false;
   const gesture={id:event.pointerId,x:event.clientX,y:event.clientY,mode:getMode(),cancelled:false,blocked:guarded};
   pointers.set(event.pointerId,gesture);if(button)button._touchGesture=gesture;
@@ -15,7 +15,7 @@ export function protectControls(root=document,{getMode=()=>'',quietMs=360}={}){
  const release=event=>{const g=pointers.get(event.pointerId);if(g&&event.type==='pointercancel')g.cancelled=true;pointers.delete(event.pointerId);if(guarded)until=now()+quietMs;};
  root.addEventListener('pointerup',release,{passive:true,capture:true});root.addEventListener('pointercancel',release,{passive:true,capture:true});
  root.addEventListener('click',event=>{
-  const button=event.target.closest('button');if(!button)return;
+  const button=event.target.closest?.('button');if(!button)return;
   const g=event.detail===0?null:button._touchGesture;delete button._touchGesture;
   if(g?.cancelled){stop(event);return;}
   if(!game(button))return;

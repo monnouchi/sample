@@ -19,5 +19,5 @@ export function prepareDOM(doc=document){
  const obsolete=doc.getElementById('companion-info');if(obsolete)obsolete.hidden=true;
  // Refresh stylesheet too when an older cached document names an old release.
  const style=doc.querySelector('link[rel="stylesheet"]');
- if(style&&!style.href.includes('20261001-cachefix'))style.href='./style.css?v=20261001-cachefix';
+ if(style&&!style.href.includes('20261001-input-boundaries'))style.href='./style.css?v=20261001-input-boundaries';
 }

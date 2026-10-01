@@ -45,3 +45,7 @@ dialog[data-kind="companion"] #dialog-content{height:100%;min-height:0;display:g
 
 dialog[data-kind="kit"]{padding:0;width:min(440px,calc(100vw - 24px));height:min(550px,calc(100svh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px));height:min(550px,calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px));max-height:none;overflow:hidden}
 dialog[data-kind="kit"] #dialog-content{height:100%;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto}.kit-header{padding:14px 16px 8px;border-bottom:1px solid var(--line)}.kit-header h2{font-size:22px;margin:0}.kit-header p{font-size:13px;margin:6px 0;line-height:1.5}.kit-list{overflow:auto;min-height:0;padding:0 16px;overscroll-behavior:contain}.kit-row{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}.kit-row strong{font-size:14px}.kit-row small,.kit-ward small{display:block;font-size:13px;line-height:1.5;margin-top:3px}.kit-row button{margin:0;min-height:44px;padding:6px;font-size:13px}.kit-ward{font-size:14px!important;line-height:1.5!important;margin:12px 0!important}.kit-rules summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-size:14px;text-decoration:underline}.kit-rules p{font-size:13px;line-height:1.6}.kit-footer{display:block;margin:0;padding:10px 16px;border-top:1px solid var(--line)}.kit-footer button{margin:0;min-height:48px}
+
+#scene-tag{display:none}
+
+.scene-caption{display:none}.expedition[hidden]{display:none}
