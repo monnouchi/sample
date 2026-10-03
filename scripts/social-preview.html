@@ -7,7 +7,7 @@ c.fillStyle='#071f22';c.fillRect(0,0,1200,630);
 const scene=document.createElement('canvas');scene.width=840;scene.height=640;const state=fresh(91);state.dir=1;drawScene(scene,state,0);c.drawImage(scene,320,0,880,670);
 const g=c.createLinearGradient(0,0,1200,0);g.addColorStop(0,'#071f22');g.addColorStop(.38,'#071f22f2');g.addColorStop(.68,'#071f2250');g.addColorStop(1,'#071f2210');c.fillStyle=g;c.fillRect(0,0,1200,630);
 function text(t,x,y,size,color,weight=500){c.fillStyle=color;c.font=`${weight} ${size}px 'Hiragino Mincho ProN', serif`;c.fillText(t,x,y)}
-text('THE VERDANT LANTERN',65,96,18,'#b5c6a0',600);text('翠灯の迷宮',60,244,75,'#edf0d6',700);text('星眠りの森',66,306,29,'#d7ce9b');
+text('翠灯の迷宮',60,244,75,'#edf0d6',700);
 c.fillStyle='#c5d698';c.fillRect(68,347,54,2);text('町の灯が消える前に。',66,407,28,'#e1e6c5');text('灯りを頼りに、10層の地下庭へ。',68,456,21,'#afc0a8');text('探索 · 地図 · 同行者',68,559,17,'#b5c6a0');
 // Hand-drawn lantern with a luminous seed, original to this share image.
 c.save();c.translate(920,328);

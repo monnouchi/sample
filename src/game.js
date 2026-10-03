@@ -1,9 +1,9 @@
-import {intent} from './boss.js?v=20261001-guardian';
-import {say,migrateDialogue} from './dialogue.js?v=20261001-guardian';
-import {GEAR,restoreKit,grantFind} from './loot.js?v=20261001-guardian';
-import {COMPANIONS,maxFloor} from './companions.js?v=20261001-guardian';
-import {LAYERS,layersFor} from './story.js?v=20261001-guardian';
-import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261001-guardian';
+import {intent} from './boss.js?v=20261003-title-only';
+import {say,migrateDialogue} from './dialogue.js?v=20261003-title-only';
+import {GEAR,restoreKit,grantFind} from './loot.js?v=20261003-title-only';
+import {COMPANIONS,maxFloor} from './companions.js?v=20261003-title-only';
+import {LAYERS,layersFor} from './story.js?v=20261003-title-only';
+import {chestTier,rewardGold,restoreRewards,CHESTS} from './rewards.js?v=20261003-title-only';
 export const SIZE = 11;
 export const DIRS = [[0,-1],[1,0],[0,1],[-1,0]];
 export const FLOORS = LAYERS.map(l=>l.title);

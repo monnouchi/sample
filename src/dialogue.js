@@ -1,5 +1,5 @@
-import {COMPANIONS} from './companions.js?v=20261001-guardian';
-import {layersFor} from './story.js?v=20261001-guardian';
+import {COMPANIONS} from './companions.js?v=20261003-title-only';
+import {layersFor} from './story.js?v=20261003-title-only';
 // Conversation and event records have separate output paths. Migration is limited
 // to exact formats emitted by older builds, never a substring match to current speech.
 export function say(s,text){if(s.version===2)s.dialogue=text;}

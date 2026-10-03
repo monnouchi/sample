@@ -1,4 +1,4 @@
-import {restoreFind} from './loot.js?v=20261001-guardian';
+import {restoreFind} from './loot.js?v=20261003-title-only';
 export const CHESTS={
  common:{name:'苔木の宝箱',mark:'Ⅰ',color:'#c2ad7e',potions:1,lightMax:10},
  silver:{name:'月銀の宝箱',mark:'Ⅱ',color:'#c5e1e8',potions:1,lightMax:15},

@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a2022"><meta name="description" content="灯りを頼りに森の迷宮を歩き、地図を描く。同行者と10層の地下庭を探索し、町を救う「灯草の種」を持ち帰るダンジョンRPG。">
-<title>翠灯の迷宮 — 星眠りの森</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css?v=20261001-guardian">
+<title>翠灯の迷宮</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css?v=20261003-title-only">
 
 <!-- Static social metadata: available to crawlers without JavaScript. -->
 <link rel="canonical" href="https://monnouchi.github.io/verdant-lantern/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="ja_JP">
-<meta property="og:site_name" content="翠灯の迷宮 — 星眠りの森">
-<meta property="og:title" content="翠灯の迷宮 — 星眠りの森">
+<meta property="og:site_name" content="翠灯の迷宮">
+<meta property="og:title" content="翠灯の迷宮">
 <meta property="og:description" content="灯りを頼りに森の迷宮を歩き、地図を描く。同行者と10層の地下庭を探索し、町を救う「灯草の種」を持ち帰るダンジョンRPG。">
 <meta property="og:url" content="https://monnouchi.github.io/verdant-lantern/">
 <meta property="og:image" content="https://monnouchi.github.io/verdant-lantern/assets/social-preview.png">
@@ -18,24 +18,24 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="翠灯の迷宮。星眠りの森の奥へ続く道と、翠色に輝くランタン。">
+<meta property="og:image:alt" content="翠灯の迷宮。森の奥へ続く道と、翠色に輝くランタン。">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="翠灯の迷宮 — 星眠りの森">
+<meta name="twitter:title" content="翠灯の迷宮">
 <meta name="twitter:description" content="灯りを頼りに森の迷宮を歩き、地図を描く。同行者と10層の地下庭を探索し、町を救う「灯草の種」を持ち帰るダンジョンRPG。">
 <meta name="twitter:image" content="https://monnouchi.github.io/verdant-lantern/assets/social-preview.png">
-<meta name="twitter:image:alt" content="翠灯の迷宮。星眠りの森の奥へ続く道と、翠色に輝くランタン。">
+<meta name="twitter:image:alt" content="翠灯の迷宮。森の奥へ続く道と、翠色に輝くランタン。">
 </head>
 <body>
 <main id="app">
- <header class="masthead"><div class="brand"><span class="brand-mark">◇</span><span>翠灯の迷宮<small>THE VERDANT LANTERN</small></span></div><div class="header-actions"><button id="sound" class="icon-button" aria-label="効果音をオンにする" aria-pressed="false">音 OFF</button><button id="help" class="icon-button" aria-label="遊び方">？</button></div></header>
- <section class="expedition" aria-label="探索情報"><span id="floor-label">星眠りの森</span><span id="compass">N · 北</span></section>
+ <header class="masthead"><div class="brand"><span class="brand-mark">◇</span><span>翠灯の迷宮</span></div><div class="header-actions"><button id="sound" class="icon-button" aria-label="効果音をオンにする" aria-pressed="false">音 OFF</button><button id="help" class="icon-button" aria-label="遊び方">？</button></div></header>
+ <section class="expedition" aria-label="探索情報"><span id="floor-label">地下庭</span><span id="compass">N · 北</span></section>
  <section class="viewport" aria-label="森の迷宮">
   <canvas id="scene" width="840" height="640" aria-label="一人称視点の迷宮。下の方向ボタンで探索できます"></canvas>
   <div id="spell-effect" aria-hidden="true"><i class="spell-focus"></i><i class="spell-ray"></i><i class="spell-impact"></i></div>
   <div class="scene-grain"></div><div class="scene-caption"><span id="scene-tag" hidden></span><span id="coordinates"></span></div>
   <button id="map-button" class="mini-map" aria-label="探索地図を拡大"><canvas id="map" width="220" height="220"></canvas><span>探索地図 <span id="map-percent">0%</span></span></button>
   <div id="enemy-hud" hidden><span class="overline" id="encounter-label">魔物との遭遇</span><h2 id="enemy-name"></h2><div class="enemy-bar"><i id="enemy-hp"></i></div></div>
-  <div id="intro" class="intro"><span class="eyebrow">星眠りの森</span><h1>翠灯<span>の</span>迷宮</h1><p>町の灯が消える前に。</p><div class="intro-rule"></div><p class="intro-description">弱った町の灯草を育て直そう。<br>地下庭の第十層で「灯草の種」を持ち帰ろう。</p><button id="start" class="primary">森へ足を踏み入れる</button><button id="continue" class="secondary" hidden>前の探索をつづける</button><button id="last-result" class="secondary" hidden>前の冒険の記録</button><span class="intro-meta">10層 · 同行者を選択 · 途中保存</span></div>
+  <div id="intro" class="intro"><span class="eyebrow">地下庭を歩く</span><h1>翠灯<span>の</span>迷宮</h1><p>町の灯が消える前に。</p><div class="intro-rule"></div><p class="intro-description">弱った町の灯草を育て直そう。<br>地下庭の第十層で「灯草の種」を持ち帰ろう。</p><button id="start" class="primary">森へ足を踏み入れる</button><button id="continue" class="secondary" hidden>前の探索をつづける</button><button id="last-result" class="secondary" hidden>前の冒険の記録</button><span class="intro-meta">10層 · 同行者を選択 · 途中保存</span></div>
  </section>
  <section id="play" hidden>
   <div id="mission" class="mission"><strong id="objective">目標：最深部の「灯草の種」</strong><button id="mission-return" hidden>帰路の灯でクリア</button></div>
@@ -61,5 +61,5 @@
  <noscript>このゲームを遊ぶにはJavaScriptを有効にしてください。</noscript>
 </main>
 <dialog id="dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
-<script type="module" src="./src/app.js?v=20261001-guardian"></script>
+<script type="module" src="./src/app.js?v=20261003-title-only"></script>
 </body></html>

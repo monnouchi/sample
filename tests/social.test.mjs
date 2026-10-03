@@ -2,10 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const repo=JSON.parse(await readFile('package.json','utf8')).name==='last-trump'?'duel-five':'verdant-lantern';
-const title=repo==='duel-five'?'Duel Five':'翠灯の迷宮 — 星眠りの森';
+const title=repo==='duel-five'?'Duel Five':'翠灯の迷宮';
 test('static social metadata resolves to a complete project-path PNG without JS',async()=>{
  const html=await readFile('index.html','utf8');const head=html.match(/<head>([\s\S]*?)<\/head>/)[1];
  const meta=new Map([...head.matchAll(/<meta\s+(?:property|name)="([^"]+)"\s+content="([^"]+)"/g)].map(m=>[m[1],m[2]]));
+ assert.ok(head.includes(`<title>${title}</title>`));assert.equal(meta.get('og:site_name'),title);
+ assert.doesNotMatch(html,/星眠りの森/);
+ const readme=await readFile('README.md','utf8');assert.match(readme,/^# 翠灯の迷宮$/m);assert.doesNotMatch(readme,/星眠りの森/);
  const canonical=`https://monnouchi.github.io/${repo}/`;
  assert.ok(head.includes(`<link rel="canonical" href="${canonical}">`));
  for(const key of ['og:title','twitter:title'])assert.equal(meta.get(key),title);
