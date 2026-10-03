@@ -1,0 +1,23 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><title>翠灯の迷宮 social artwork source</title><style>body{margin:0;background:#0a2022}canvas{display:block}</style><canvas width="1200" height="630"></canvas><script type="module">
+// Original composition using this game's owned, deterministic forest renderer.
+import {drawScene} from '../src/render.js';
+import {fresh} from '../src/game.js';
+const canvas=document.querySelector('canvas'),c=canvas.getContext('2d');
+c.fillStyle='#071f22';c.fillRect(0,0,1200,630);
+const scene=document.createElement('canvas');scene.width=840;scene.height=640;const state=fresh(91);state.dir=1;drawScene(scene,state,0);c.drawImage(scene,320,0,880,670);
+const g=c.createLinearGradient(0,0,1200,0);g.addColorStop(0,'#071f22');g.addColorStop(.38,'#071f22f2');g.addColorStop(.68,'#071f2250');g.addColorStop(1,'#071f2210');c.fillStyle=g;c.fillRect(0,0,1200,630);
+function text(t,x,y,size,color,weight=500){c.fillStyle=color;c.font=`${weight} ${size}px 'Hiragino Mincho ProN', serif`;c.fillText(t,x,y)}
+text('THE VERDANT LANTERN',65,96,18,'#b5c6a0',600);text('翠灯の迷宮',60,244,75,'#edf0d6',700);text('星眠りの森',66,306,29,'#d7ce9b');
+c.fillStyle='#c5d698';c.fillRect(68,347,54,2);text('町の灯が消える前に。',66,407,28,'#e1e6c5');text('灯りを頼りに、10層の地下庭へ。',68,456,21,'#afc0a8');text('探索 · 地図 · 同行者',68,559,17,'#b5c6a0');
+// Hand-drawn lantern with a luminous seed, original to this share image.
+c.save();c.translate(920,328);
+const glow=c.createRadialGradient(0,0,10,0,0,215);glow.addColorStop(0,'#dbefab65');glow.addColorStop(.4,'#b1e68d25');glow.addColorStop(1,'#a1e18900');c.fillStyle=glow;c.fillRect(-240,-250,480,500);
+c.strokeStyle='#d4d7a2';c.lineWidth=6;c.beginPath();c.arc(0,-139,35,Math.PI,0);c.lineTo(35,-108);c.stroke();
+c.fillStyle='#173b31';c.strokeStyle='#a7bb85';c.lineWidth=5;c.beginPath();c.moveTo(-65,-99);c.lineTo(65,-99);c.lineTo(86,96);c.lineTo(-86,96);c.closePath();c.fill();c.stroke();
+c.fillStyle='#b6c090';c.beginPath();c.moveTo(-88,-99);c.lineTo(0,-151);c.lineTo(88,-99);c.closePath();c.fill();c.fillStyle='#506e50';c.fillRect(-97,97,194,14);
+const core=c.createRadialGradient(0,14,1,0,14,78);core.addColorStop(0,'#f9f5bf');core.addColorStop(.3,'#cce99a');core.addColorStop(1,'#7ec57900');c.fillStyle=core;c.fillRect(-77,-65,154,158);
+c.strokeStyle='#e0e8ab';c.lineWidth=3;c.beginPath();c.moveTo(0,58);c.quadraticCurveTo(-4,14,8,-27);c.stroke();
+for(const [x,y,s] of [[-12,20,-1],[13,-6,1]]){c.save();c.translate(x,y);c.scale(s,1);c.fillStyle='#d5efac';c.beginPath();c.ellipse(8,0,17,8,-.6,0,Math.PI*2);c.fill();c.restore()}
+c.strokeStyle='#9aaf78';c.lineWidth=4;for(const x of [-58,58]){c.beginPath();c.moveTo(x,-90);c.lineTo(x*1.3,91);c.stroke()}c.restore();
+window.artworkReady=true;
+</script></html>
